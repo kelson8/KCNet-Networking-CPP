@@ -1,0 +1,35 @@
+#pragma once
+
+#include <iostream>
+#include <format>
+#include <string>
+
+// Enable my SSL testing, required to be enabled on the Server and Client or it won't work.
+// #define SECURE_SERVER_TEST
+
+// Set the server connection info.
+#define SERVER_PORT 8055
+#define SERVER_IP "192.168.1.108"
+
+// Size for buffer
+#define BUFFER_SIZE 1024
+
+// Enable the new server test with the library.
+// https://github.com/embeddedmz/socket-cpp
+// TODO Fix this to work.
+// #define NEW_SERVER_TEST
+
+// This works for logging with a message
+template <typename T, typename... Ts>
+inline void log_output(const T& first, const Ts&... rest)
+{
+    std::cout << "[TcpClient]: " << first;
+    ((std::cout << rest), ...);   // print each remaining argument
+    std::cout << std::endl;
+}
+
+// template <typename... Ts>
+// inline void log_output(std::string_view fmt, Ts&&... args)
+// {
+//     std::cout << "[TcpClient]: " << std::vformat(fmt, std::make_format_args(args...)) << "\n";
+// }
