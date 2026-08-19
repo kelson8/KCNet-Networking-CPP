@@ -13,13 +13,15 @@ The **TcpClient** folder contains the client that connects to **TcpServer**
 The **TcpServer** folder runs a basic TCP socket in a while loop and cleans up with a SIGINT.
 
 ## Building
-To build this project, you will require the below dependencies
+To build this project, you will require the below dependencies, I will need to write down a full list later.
 
 ```bash
-sudo apt install cmake python3-dev libicu-dev libbz2-dev zlib1g-dev
+sudo apt install cmake python3-dev libicu-dev libbz2-dev zlib1g-dev screen
 ```
 
 To build this, you can run the `clean-build.sh` script which deletes the build folder and recreates it.
+
+If you have already built this with CMake, run the `build.sh` script to rebuild without deleting the build folder.
 
 ## Preprocessors
 You can enable/disable some preprocessors and change their values in the `defines.h` files within the projects.
@@ -38,7 +40,7 @@ To run the projects on their own:
 * `./run-projects.sh TcpServer` - To start the server.
 * `./run-projects.sh TcpClient` - To connect to the server and send a message from the code.
 
-To test the TCP server messaging
+To test the TCP server messaging, now runs with `screen` on Linux.
 * Run `./test-tcp.sh`
 
 I will make a Dockerfile to build and test this project later.

@@ -1,13 +1,15 @@
 #include "config.h"
 
+#include "defines.h"
+
 //------------
 // Private values
 //------------
 
-const std::string Config::ProgramName = "TcpServer";
-const std::string Config::ProgramVersion = "0.0.1a";
+const std::string Config::ProgramName = PROGRAM_NAME;
+const std::string Config::ProgramVersion = PROGRAM_VERSION;
 
-const std::string Config::LogPrefix = "TcpServer";
+const std::string Config::LogPrefix = PROGRAM_NAME;
 
 const std::string Config::LogFile = "tcpserver.log";
 

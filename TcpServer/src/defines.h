@@ -10,6 +10,10 @@
 // Size for buffer
 #define BUFFER_SIZE 1024
 
+// Program info
+#define PROGRAM_NAME "KCNet-TcpServer"
+#define PROGRAM_VERSION "v0.0.1a"
+
 // Enable my SSL testing, required to be enabled on the Server and Client or it won't work.
 // #define SECURE_SERVER_TEST
 
@@ -23,7 +27,8 @@
 template <typename T, typename... Ts>
 inline void log_output(const T& first, const Ts&... rest)
 {
-    std::cout << "[TcpServer]: " << first;
+    // std::cout << "[TcpServer]: " << first;
+    std::cout << "[" << PROGRAM_NAME << "]: " << first;
     ((std::cout << rest), ...);   // print each remaining argument
     std::cout << std::endl;
 }

@@ -14,6 +14,10 @@
 // Size for buffer
 #define BUFFER_SIZE 1024
 
+// Program info
+#define PROGRAM_NAME "KCNet-TcpClient"
+#define PROGRAM_VERSION "v0.0.1a"
+
 // Enable the new server test with the library.
 // https://github.com/embeddedmz/socket-cpp
 // TODO Fix this to work.
@@ -23,7 +27,8 @@
 template <typename T, typename... Ts>
 inline void log_output(const T& first, const Ts&... rest)
 {
-    std::cout << "[TcpClient]: " << first;
+    // std::cout << "[TcpClient]: " << first;
+    std::cout << "[" << PROGRAM_NAME << "]: " << first;
     ((std::cout << rest), ...);   // print each remaining argument
     std::cout << std::endl;
 }
