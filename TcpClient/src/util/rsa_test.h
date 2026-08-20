@@ -29,8 +29,11 @@ public:
                  unsigned char *plaintext,
                  int &plaintext_len);
 
-    // void PublicKeyTesting();
-    std::string ReadPrivateKey(const char* privateKeyFile);
+    void PublicKeyTesting();
+
+    unsigned char* GetPublicKey(EVP_PKEY *key);
+    unsigned char* GetPrivateKey(EVP_PKEY *key);
+    void ReadKeyFromFile();
     void TestRsa();
 
     void NewRsaTest();

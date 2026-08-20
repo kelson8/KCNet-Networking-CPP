@@ -10,6 +10,8 @@
 #include "base64.hpp"
 #include "openssl_test.h"
 
+#include "rsa_test.h"
+
 #endif // __linux__
 
 //--------------
@@ -29,13 +31,20 @@ int main(int argc, char *argv[])
 {
 
 #ifdef __linux__
-    OpensslTest opensslTest;
+    // OpensslTest opensslTest;
+    RsaTest rsaTest;
     TcpClient &tcpClient = TcpClient::getInstance();
 
-    // opensslTest.PublicKeyTesting();
-    // opensslTest.TestRsa();
+    // This public key testing is currently disabled.
+    // rsaTest.PublicKeyTesting();
 
-    // opensslTest.ReadPrivateKey("server.pem");
+    // Displays either the public key or private key from the file
+    // rsaTest.ReadKeyFromFile();
+    
+    // rsaTest.TestRsa();
+
+    // Disabled.
+    // rsaTest.ReadPrivateKey("server.pem");
 
 #ifdef SECURE_SERVER_TEST
 

@@ -2,13 +2,11 @@
 
 #ifdef __linux__
 
-
 #include <arpa/inet.h>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
 #include <netinet/in.h>
-#include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -21,13 +19,6 @@
 
 #include <memory>
 #include <string>
-
-#ifdef NEW_SERVER_TEST
-#include "TCPClient.h"
-#include "TCPServer.h"
-#include "TCPSSLServer.h"
-#include "TCPSSLClient.h"
-#endif // NEW_SERVER_TEST
 
 // #include "decrypt.h"
 // #include "encrypt.h"
@@ -69,11 +60,11 @@ EVP_PKEY &RsaTest::CreatePrivateKey()
 // TODO Figure out how to use these encrypt and decrypt functions with X509.
 
 bool RsaTest::Encrypt(const unsigned char *plaintext,
-                          int plaintext_len,
-                          const unsigned char *key,
-                          const unsigned char *iv,
-                          unsigned char *ciphertext,
-                          int &ciphertext_len)
+                      int plaintext_len,
+                      const unsigned char *key,
+                      const unsigned char *iv,
+                      unsigned char *ciphertext,
+                      int &ciphertext_len)
 {
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     if (!ctx)
@@ -101,11 +92,11 @@ bool RsaTest::Encrypt(const unsigned char *plaintext,
 }
 
 bool RsaTest::Decrypt(const unsigned char *ciphertext,
-                          int ciphertext_len,
-                          const unsigned char *key,
-                          const unsigned char *iv,
-                          unsigned char *plaintext,
-                          int &plaintext_len)
+                      int ciphertext_len,
+                      const unsigned char *key,
+                      const unsigned char *iv,
+                      unsigned char *plaintext,
+                      int &plaintext_len)
 {
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     if (!ctx)
@@ -215,75 +206,6 @@ int public_decrypt(unsigned char *enc_data, int data_len, unsigned char *key, un
 // Example new RSA usage
 
 /**
- * Read the private key
- * TODO Test this, made from PublicKeyTesting function
- */
-// void RsaTest::ReadPrivateKey(const char *privateKeyFile)
-std::string RsaTest::ReadPrivateKey(const char *privateKeyFile)
-{
-    FileFunctions &fileFunctions = FileFunctions::getInstance();
-
-    EVP_PKEY *key = NULL;
-
-    FILE *fp;
-
-    // Buffer for data read
-    int buffer[120];
-
-    // Open the file in read mode.
-    fp = fopen(privateKeyFile, "r");
-    // Open the file in binary read mode.
-    // fp = fopen(privateKeyFile, "rb");
-
-    std::string privateKey = fileFunctions.ReadFile(privateKeyFile);
-    
-    // Print the contents from the private key file.
-    // std::cout << "Private Key: " << ReadFile(privateKeyFile) << std::endl;
-
-    // https://gist.github.com/cseelye/adcd900768ff61f697e603fd41c67625
-    // Put the certificate contents into an openssl IO stream (BIO)
-    // I didn't know I could do this.
-    BIO_ptr input(BIO_new(BIO_s_mem()), BIO_free);
-    // BIO_write(input.get(), cert_content.c_str(), cert_content.size());
-    BIO_write(input.get(), privateKey.c_str(), privateKey.size());
-    //
-
-    
-    // if (!fp)
-    // {
-    //     std::cerr << "RSA Private key: private.pem not found." << std::endl;
-    //     return;
-    // }
-
-    if (!PEM_read_PrivateKey(fp, &key, NULL, NULL))
-    {
-        std::cerr << "Failed to read private key" << std::endl;
-        return "Failed to read private key";
-    }
-
-    if (key == NULL)
-    {
-        std::cerr << "Key was null" << std::endl;
-        return "Key was null";
-    }
-
-    log_output("SSL Private Key file seems to be valid");
-
-    // TODO Figure out why this value is different each time, at least I think it is reading the key.
-    // std::cout << "Key: " << &key << std::endl;
-    // log_output(privateKey);
-
-    return privateKey;
-
-    // Close the file
-    fclose(fp);
-
-    return "";
-
-    // std::cout << fp << std::endl;
-}
-
-/**
  * This works, although I did a lot of this
  * reinterpret_cast<unsigned char*>
  *
@@ -307,19 +229,20 @@ void RsaTest::TestRsa()
     // const char *privateKey1 = ReadPrivateKey("server.pem").copy();
     // char privateKey1 = ReadPrivateKey("server.pem");
 
-    //I think this works!
-    // Mostly from this guide below
-    // https://stackoverflow.com/questions/2206050/how-to-convert-a-string-literal-to-unsigned-char-array-in-visual-c
-    // Other guide for this:
-    // https://www.techiedelight.com/convert-std-string-char-cpp/
+    // I think this works!
+    //  Mostly from this guide below
+    //  https://stackoverflow.com/questions/2206050/how-to-convert-a-string-literal-to-unsigned-char-array-in-visual-c
+    //  Other guide for this:
+    //  https://www.techiedelight.com/convert-std-string-char-cpp/
 
-    // Reading a private key into an unsigned char 
+    // Reading a private key into an unsigned char
     unsigned char privateKeyTest[2048];
     // char privateKeyTest[2048];
     // strcpy((char*) privateKeyTest, ReadPrivateKey("server.pem").c_str());
     // Instead of '(char*)', I can use 'static_cast <char*>'
     // Well this just gives a segfault when trying to be used instead of the below privateKey value.
-    strcpy((char*) privateKeyTest, ReadPrivateKey("server.pem").c_str());
+    // strcpy((char *)privateKeyTest, ReadPrivateKey("server.pem").c_str());
+    // strcpy((char *)privateKeyTest, GetPrivateKey("server.pem").c_str());
 
     // Test for private key reading.
     // This displays the private key.
@@ -405,10 +328,139 @@ void RsaTest::TestRsa()
 
     log_output("Decrypted Text: ", decrypted);
     log_output("Decrypted Length: ", decrypted_length);
-    
 }
 
 //-------
+
+/**
+ * Get the public key as a string
+ * 
+ * @param key The EVP_PKEY pointer.
+ */
+unsigned char* RsaTest::GetPublicKey(EVP_PKEY *key)
+{
+    // create a place to dump the IO, in this case in memory
+    BIO *publicBIO = BIO_new(BIO_s_mem());
+
+    // dump key to IO
+    PEM_write_bio_PUBKEY(publicBIO, key);
+
+    // get buffer length
+    int publicKeyLen = BIO_pending(publicBIO);
+
+    // create char reference of public key length
+    unsigned char *publicKeyChar = (unsigned char *)malloc(publicKeyLen);
+
+    // read the key from the buffer and put it in the char reference
+    BIO_read(publicBIO, publicKeyChar, publicKeyLen);
+    // at this point we can save the public somewhere
+
+    // pretend we are pulling the public key from some source and using it
+    // to encrypt a message
+    unsigned char *rsaPublicKeyChar = publicKeyChar;
+
+    // write char array to BIO
+    BIO *rsaPublicBIO = BIO_new_mem_buf(rsaPublicKeyChar, -1);
+
+    // create a RSA object from public key char array
+    RSA *rsaPublicKey = NULL;
+    PEM_read_bio_RSA_PUBKEY(rsaPublicBIO, &rsaPublicKey, NULL, NULL);
+
+    // create public key
+    // TODO Make a function for this.
+    // EVP_PKEY *publicKey = EVP_PKEY_new();
+    // EVP_PKEY_assign_RSA(publicKey, rsaPublicKey);
+
+    return publicKeyChar;
+
+
+}
+
+/**
+ * Get the private key as a string
+ * 
+ * @param key The EVP_PKEY pointer.
+ */
+unsigned char* RsaTest::GetPrivateKey(EVP_PKEY *key)
+{
+    // EVP_PKEY *key = NULL;
+
+    // create a RSA object from private key char array
+    RSA *rsaPrivateKey = NULL;
+
+    // create a place to dump the IO, in this case in memory
+    BIO *privateBIO = BIO_new(BIO_s_mem());
+    // dump key to IO
+    PEM_write_bio_PrivateKey(privateBIO, key, NULL, NULL, 0, 0, NULL);
+    // get buffer length
+    int privateKeyLen = BIO_pending(privateBIO);
+    // create char reference of private key length
+    unsigned char *privateKeyChar = (unsigned char *)malloc(privateKeyLen);
+    // read the key from the buffer and put it in the char reference
+    BIO_read(privateBIO, privateKeyChar, privateKeyLen);
+
+    // at this point we can save the private key somewhere
+    return privateKeyChar;
+}
+
+void RsaTest::ReadKeyFromFile()
+{
+    // init RSA context, so we can generate a key pair
+    // EVP_PKEY_CTX *keyCtx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+    // EVP_PKEY_keygen_init(keyCtx);
+    // EVP_PKEY_CTX_set_rsa_keygen_bits(keyCtx, 4096); // RSA 4096
+    // variable that will hold both private and public keys
+    EVP_PKEY *key = NULL;
+
+    // TODO Make a function for this.
+    // generate key
+    // EVP_PKEY_keygen(keyCtx, &key);
+    // free up key context
+    // EVP_PKEY_CTX_free(keyCtx);
+
+    // New method for reading from a private key, this reads from a file.
+    // TODO Figure out how to use this, it'll fix a deprecation warning, and it looks like this can read from a file.
+    // https://github.com/openssl/openssl/discussions/25034
+    // https://ssojet.com/keypair-generation/generate-keypair-using-rsa-in-cpp#generating-the-rsa-key-pair
+    // FILE* fp = fopen("private.pem", "wb");
+
+    // To generate a key for this
+    /*
+    The .pem is normally file set as .crt when I use the command, but either one seems to work.
+    openssl req -x509 -newkey rsa:4096 -keyout server.key -out server.pem -days 365 -nodes
+    */
+    // TODO Move this to a function variable later.
+    const char *privateKeyFile = "server.key";
+    FILE *fp = fopen(privateKeyFile, "r");
+    if (!fp)
+    {
+        std::cerr << "RSA Private key: " << privateKeyFile << " not found." << std::endl;
+        return;
+    }
+
+    if (!PEM_read_PrivateKey(fp, &key, NULL, NULL))
+    {
+        std::cerr << "Failed to read private key" << std::endl;
+        return;
+    }
+
+    //---------
+    // Extract private key as string
+    //---------
+
+    unsigned char* privateKey = GetPrivateKey(key);
+
+    // std::cout << "Private Key: \n" << privateKey << std::endl;
+
+    //---------
+    // Extract public key as string
+    //---------
+
+    unsigned char* publicKey = GetPublicKey(key);
+    std::cout << "Public Key: \n" << publicKey << std::endl;
+}
+
+
 
 /**
  * Testing with RSA.
@@ -420,203 +472,206 @@ void RsaTest::TestRsa()
  * TODO Make this into multiple functions.
  * TODO Figure out how this is encoding/decoding the keys.
  * TODO Figure out how to encode/decode the encrypted text with Base64.
- * 
+ *
  * I disabled the below test.
  */
-// void RsaTest::PublicKeyTesting()
-// {
+void RsaTest::PublicKeyTesting()
+{
 
-//     //---------
-//     // Create private/public key pair
-//     //---------
+    //---------
+    // Create private/public key pair
+    //---------
 
-//     // init RSA context, so we can generate a key pair
-//     EVP_PKEY_CTX *keyCtx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
-//     EVP_PKEY_keygen_init(keyCtx);
-//     EVP_PKEY_CTX_set_rsa_keygen_bits(keyCtx, 4096); // RSA 4096
-//     // variable that will hold both private and public keys
-//     EVP_PKEY *key = NULL;
-//     // generate key
-//     EVP_PKEY_keygen(keyCtx, &key);
-//     // free up key context
-//     EVP_PKEY_CTX_free(keyCtx);
+    // init RSA context, so we can generate a key pair
+    EVP_PKEY_CTX *keyCtx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+    EVP_PKEY_keygen_init(keyCtx);
+    EVP_PKEY_CTX_set_rsa_keygen_bits(keyCtx, 4096); // RSA 4096
+    // variable that will hold both private and public keys
+    EVP_PKEY *key = NULL;
+    // generate key
+    EVP_PKEY_keygen(keyCtx, &key);
+    // free up key context
+    EVP_PKEY_CTX_free(keyCtx);
 
-//     // EVP_PKEY *key = &CreatePrivateKey();
+    // EVP_PKEY *key = &CreatePrivateKey();
 
-//     //---------
-//     // Extract private key as string
-//     //---------
+    //---------
+    // Extract private key as string
+    // This is now its own function
+    //---------
 
-//     // create a place to dump the IO, in this case in memory
-//     BIO *privateBIO = BIO_new(BIO_s_mem());
-//     // dump key to IO
-//     PEM_write_bio_PrivateKey(privateBIO, key, NULL, NULL, 0, 0, NULL);
-//     // get buffer length
-//     int privateKeyLen = BIO_pending(privateBIO);
-//     // create char reference of private key length
-//     unsigned char *privateKeyChar = (unsigned char *)malloc(privateKeyLen);
-//     // read the key from the buffer and put it in the char reference
-//     BIO_read(privateBIO, privateKeyChar, privateKeyLen);
-//     // at this point we can save the private key somewhere
+    // create a place to dump the IO, in this case in memory
+    BIO *privateBIO = BIO_new(BIO_s_mem());
+    // dump key to IO
+    PEM_write_bio_PrivateKey(privateBIO, key, NULL, NULL, 0, 0, NULL);
+    // get buffer length
+    int privateKeyLen = BIO_pending(privateBIO);
+    // create char reference of private key length
+    unsigned char *privateKeyChar = (unsigned char *)malloc(privateKeyLen);
+    // read the key from the buffer and put it in the char reference
+    BIO_read(privateBIO, privateKeyChar, privateKeyLen);
+    // at this point we can save the private key somewhere
 
-//     //---------
-//     // Extract public key as string
-//     //---------
+    //---------
+    // Extract public key as string
+    //---------
 
-//     // create a place to dump the IO, in this case in memory
-//     BIO *publicBIO = BIO_new(BIO_s_mem());
+    // create a place to dump the IO, in this case in memory
+    BIO *publicBIO = BIO_new(BIO_s_mem());
 
-//     // dump key to IO
-//     PEM_write_bio_PUBKEY(publicBIO, key);
+    // dump key to IO
+    PEM_write_bio_PUBKEY(publicBIO, key);
 
-//     // get buffer length
-//     int publicKeyLen = BIO_pending(publicBIO);
+    // get buffer length
+    int publicKeyLen = BIO_pending(publicBIO);
 
-//     // create char reference of public key length
-//     unsigned char *publicKeyChar = (unsigned char *)malloc(publicKeyLen);
+    // create char reference of public key length
+    unsigned char *publicKeyChar = (unsigned char *)malloc(publicKeyLen);
 
-//     // read the key from the buffer and put it in the char reference
-//     BIO_read(publicBIO, publicKeyChar, publicKeyLen);
-//     // at this point we can save the public somewhere
+    // read the key from the buffer and put it in the char reference
+    BIO_read(publicBIO, publicKeyChar, publicKeyLen);
+    // at this point we can save the public somewhere
 
-//     // pretend we are pulling the public key from some source and using it
-//     // to encrypt a message
-//     unsigned char *rsaPublicKeyChar = publicKeyChar;
+    // pretend we are pulling the public key from some source and using it
+    // to encrypt a message
+    unsigned char *rsaPublicKeyChar = publicKeyChar;
 
-//     // write char array to BIO
-//     BIO *rsaPublicBIO = BIO_new_mem_buf(rsaPublicKeyChar, -1);
+    // write char array to BIO
+    BIO *rsaPublicBIO = BIO_new_mem_buf(rsaPublicKeyChar, -1);
 
-//     // create a RSA object from public key char array
-//     RSA *rsaPublicKey = NULL;
-//     PEM_read_bio_RSA_PUBKEY(rsaPublicBIO, &rsaPublicKey, NULL, NULL);
+    // create a RSA object from public key char array
+    RSA *rsaPublicKey = NULL;
+    PEM_read_bio_RSA_PUBKEY(rsaPublicBIO, &rsaPublicKey, NULL, NULL);
 
-//     // create public key
-//     EVP_PKEY *publicKey = EVP_PKEY_new();
-//     EVP_PKEY_assign_RSA(publicKey, rsaPublicKey);
+    // create public key
+    EVP_PKEY *publicKey = EVP_PKEY_new();
+    EVP_PKEY_assign_RSA(publicKey, rsaPublicKey);
 
-//     //---------
-//     // Initialize encrypt context
-//     //---------
+    //---------
+    // Initialize encrypt context
+    //---------
 
-//     // EVP_CIPHER_CTX *rsaEncryptCtx = (EVP_CIPHER_CTX *) malloc(sizeof(EVP_CIPHER_CTX));
-//     EVP_CIPHER_CTX *rsaEncryptCtx = EVP_CIPHER_CTX_new();
-//     EVP_CIPHER_CTX_init(rsaEncryptCtx);
+    // EVP_CIPHER_CTX *rsaEncryptCtx = (EVP_CIPHER_CTX *) malloc(sizeof(EVP_CIPHER_CTX));
+    EVP_CIPHER_CTX *rsaEncryptCtx = EVP_CIPHER_CTX_new();
+    EVP_CIPHER_CTX_init(rsaEncryptCtx);
 
-//     // variables for where the encrypted secret, length, and IV reside
-//     unsigned char *ek = (unsigned char *)malloc(EVP_PKEY_size(publicKey));
-//     int ekLen = 0;
-//     unsigned char *iv = (unsigned char *)malloc(EVP_MAX_IV_LENGTH);
+    // variables for where the encrypted secret, length, and IV reside
+    unsigned char *ek = (unsigned char *)malloc(EVP_PKEY_size(publicKey));
+    int ekLen = 0;
+    unsigned char *iv = (unsigned char *)malloc(EVP_MAX_IV_LENGTH);
 
-//     //---------
-//     // generate AES secret, and encrypt it with public key
-//     EVP_SealInit(rsaEncryptCtx, EVP_aes_256_cbc(), &ek, &ekLen, iv, &publicKey, 1);
+    //---------
+    // generate AES secret, and encrypt it with public key
+    EVP_SealInit(rsaEncryptCtx, EVP_aes_256_cbc(), &ek, &ekLen, iv, &publicKey, 1);
 
-//     //---------
-//     // encrypt a message with AES secret
-//     std::string message = "You can include the standard headers in any order, a standard header more than once, or two or more standard headers that define the same macro or the same type. Do not include a standard header within a declaration. Do not define macros that have the same names as keywords before you include a standard header.";
+    //---------
+    // encrypt a message with AES secret
+    std::string message = "You can include the standard headers in any order, a standard header more than once, or two or more standard headers that define the same macro or the same type. Do not include a standard header within a declaration. Do not define macros that have the same names as keywords before you include a standard header.";
 
-//     const unsigned char *messageChar = (const unsigned char *)message.c_str();
-//     // length of message
-//     int messageLen = message.size() + 1;
+    const unsigned char *messageChar = (const unsigned char *)message.c_str();
+    // length of message
+    int messageLen = message.size() + 1;
 
-//     // create char reference for where the encrypted message will reside
-//     unsigned char *encryptedMessage = (unsigned char *)malloc(messageLen + EVP_MAX_IV_LENGTH);
+    // create char reference for where the encrypted message will reside
+    unsigned char *encryptedMessage = (unsigned char *)malloc(messageLen + EVP_MAX_IV_LENGTH);
 
-//     // the length of the encrypted message
-//     int encryptedMessageLen = 0;
-//     int encryptedBlockLen = 0;
+    // the length of the encrypted message
+    int encryptedMessageLen = 0;
+    int encryptedBlockLen = 0;
 
-//     // encrypt message with AES secret
-//     EVP_SealUpdate(rsaEncryptCtx, encryptedMessage, &encryptedBlockLen, messageChar, messageLen);
-//     encryptedMessageLen = encryptedBlockLen;
+    // encrypt message with AES secret
+    EVP_SealUpdate(rsaEncryptCtx, encryptedMessage, &encryptedBlockLen, messageChar, messageLen);
+    encryptedMessageLen = encryptedBlockLen;
 
-//     // finalize by encrypting the padding
-//     EVP_SealFinal(rsaEncryptCtx, encryptedMessage + encryptedBlockLen, &encryptedBlockLen);
-//     encryptedMessageLen += encryptedBlockLen;
+    // finalize by encrypting the padding
+    EVP_SealFinal(rsaEncryptCtx, encryptedMessage + encryptedBlockLen, &encryptedBlockLen);
+    encryptedMessageLen += encryptedBlockLen;
 
-//     // pretend we are decrypting a message we have received using a the private key we have
-//     unsigned char *rsaPrivateKeyChar = privateKeyChar;
+    // pretend we are decrypting a message we have received using a the private key we have
+    unsigned char *rsaPrivateKeyChar = privateKeyChar;
 
-//     // write char array to BIO
-//     BIO *rsaPrivateBIO = BIO_new_mem_buf(rsaPrivateKeyChar, -1);
+    // write char array to BIO
+    BIO *rsaPrivateBIO = BIO_new_mem_buf(rsaPrivateKeyChar, -1);
 
-//     // create a RSA object from private key char array
-//     RSA *rsaPrivateKey = NULL;
-//     // PEM_read_bio_RSAPrivateKey(rsaPrivateBIO, &rsaPrivateKey, NULL, NULL);
+    // create a RSA object from private key char array
+    RSA *rsaPrivateKey = NULL;
+    // PEM_read_bio_RSAPrivateKey(rsaPrivateBIO, &rsaPrivateKey, NULL, NULL);
 
-//     // New method for reading from a private key, this reads from a file.
-//     // TODO Figure out how to use this, it'll fix a deprecation warning, and it looks like this can read from a file.
-//     // https://github.com/openssl/openssl/discussions/25034
-//     // https://ssojet.com/keypair-generation/generate-keypair-using-rsa-in-cpp#generating-the-rsa-key-pair
-//     // FILE* fp = fopen("private.pem", "wb");
+    // New method for reading from a private key, this reads from a file.
+    // TODO Figure out how to use this, it'll fix a deprecation warning, and it looks like this can read from a file.
+    // https://github.com/openssl/openssl/discussions/25034
+    // https://ssojet.com/keypair-generation/generate-keypair-using-rsa-in-cpp#generating-the-rsa-key-pair
+    // FILE* fp = fopen("private.pem", "wb");
 
-//     // To generate a key for this
-//     /*
-//     The .pem is normally file set as .crt when I use the command, but either one seems to work.
-//     openssl req -x509 -newkey rsa:4096 -keyout server.key -out server.pem -days 365 -nodes
-//     */
-//     FILE *fp = fopen("server.pem", "r");
-//     if (!fp)
-//     {
-//         std::cerr << "RSA Private key: private.pem not found." << std::endl;
-//         return;
-//     }
+    // To generate a key for this
+    /*
+    The .pem is normally file set as .crt when I use the command, but either one seems to work.
+    openssl req -x509 -newkey rsa:4096 -keyout server.key -out server.pem -days 365 -nodes
+    */
+    // TODO Move this to a function variable later.
+    const char *privateKeyFile = "server.key";
+    FILE *fp = fopen(privateKeyFile, "r");
+    if (!fp)
+    {
+        std::cerr << "RSA Private key: " << privateKeyFile << " not found." << std::endl;
+        return;
+    }
 
-//     if (!PEM_read_PrivateKey(fp, &key, NULL, NULL))
-//     {
-//         std::cerr << "Failed to read private key" << std::endl;
-//         return;
-//     }
+    if (!PEM_read_PrivateKey(fp, &key, NULL, NULL))
+    {
+        std::cerr << "Failed to read private key" << std::endl;
+        return;
+    }
 
-//     // create private key
-//     EVP_PKEY *privateKey = EVP_PKEY_new();
-//     EVP_PKEY_assign_RSA(privateKey, rsaPrivateKey);
+    // create private key
+    EVP_PKEY *privateKey = EVP_PKEY_new();
+    EVP_PKEY_assign_RSA(privateKey, rsaPrivateKey);
 
-//     //---------
-//     // Initialize decrypt context
-//     //---------
+    //---------
+    // Initialize decrypt context
+    //---------
 
-//     EVP_CIPHER_CTX *rsaDecryptCtx = EVP_CIPHER_CTX_new();
-//     EVP_CIPHER_CTX_init(rsaDecryptCtx);
+    EVP_CIPHER_CTX *rsaDecryptCtx = EVP_CIPHER_CTX_new();
+    EVP_CIPHER_CTX_init(rsaDecryptCtx);
 
-//     // decrypt EK with private key, and get AES secretp
-//     EVP_OpenInit(rsaDecryptCtx, EVP_aes_256_cbc(), ek, ekLen, iv, privateKey);
+    // decrypt EK with private key, and get AES secretp
+    EVP_OpenInit(rsaDecryptCtx, EVP_aes_256_cbc(), ek, ekLen, iv, privateKey);
 
-//     // variable for where the decrypted message with be outputed to
-//     unsigned char *decryptedMessage = (unsigned char *)malloc(encryptedMessageLen + EVP_MAX_IV_LENGTH);
+    // variable for where the decrypted message with be outputed to
+    unsigned char *decryptedMessage = (unsigned char *)malloc(encryptedMessageLen + EVP_MAX_IV_LENGTH);
 
-//     // the length of the encrypted message
-//     int decryptedMessageLen = 0;
-//     int decryptedBlockLen = 0;
+    // the length of the encrypted message
+    int decryptedMessageLen = 0;
+    int decryptedBlockLen = 0;
 
-//     // decrypt message with AES secret
-//     EVP_OpenUpdate(rsaDecryptCtx, decryptedMessage, &decryptedBlockLen, encryptedMessage, encryptedMessageLen);
-//     decryptedMessageLen = decryptedBlockLen;
-//     // finalize by decrypting padding
-//     EVP_OpenFinal(rsaDecryptCtx, decryptedMessage + decryptedBlockLen, &decryptedBlockLen);
-//     decryptedMessageLen += decryptedBlockLen;
+    // decrypt message with AES secret
+    EVP_OpenUpdate(rsaDecryptCtx, decryptedMessage, &decryptedBlockLen, encryptedMessage, encryptedMessageLen);
+    decryptedMessageLen = decryptedBlockLen;
+    // finalize by decrypting padding
+    EVP_OpenFinal(rsaDecryptCtx, decryptedMessage + decryptedBlockLen, &decryptedBlockLen);
+    decryptedMessageLen += decryptedBlockLen;
 
-//     // Print out the encrypted message
-//     // TODO Figure out how to encode the encrypted message, possibly use base64?
-//     // std::cout << encryptedMessage << std::endl;
-//     // std::cout << publicBIO << std::endl;
-//     // std::cout << "Public Key: " << publicKey << std::endl;
-//     // std::cout << "Private Key: " << privateKey << std::endl;
+    // Print out the encrypted message
+    // TODO Figure out how to encode the encrypted message, possibly use base64?
+    // std::cout << encryptedMessage << std::endl;
+    // std::cout << publicBIO << std::endl;
+    // std::cout << "Public Key: " << publicKey << std::endl;
+    // std::cout << "Private Key: " << privateKey << std::endl;
 
-//     // std::cout << "Decrypted message: " << decryptedMessage << std::endl;
+    // std::cout << "Decrypted message: " << decryptedMessage << std::endl;
 
-//     auto encodedMessage = base64::to_base64(encryptedMessage, sizeof(encryptedMessage));
-//     std::cout << "Encrypted message encoded with base64: " << encodedMessage << std::endl;
-// }
+    auto encodedMessage = base64::to_base64(encryptedMessage, sizeof(encryptedMessage));
+    std::cout << "Encrypted message encoded with base64: " << encodedMessage << std::endl;
+}
 
 /**
  * New RSA Testing with library
  * TODO Fix this to work.
- * 
+ *
  * https://github.com/ParallelEngineering/RSA
  */
 // void RsaTest::NewRsaTest()
-// {    
+// {
 //     keyPair keys;
 
 //     PublicKey publicKey = keys.getPublicKey();
