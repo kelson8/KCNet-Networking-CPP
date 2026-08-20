@@ -1,0 +1,40 @@
+version: '1.0'
+
+# Workflow for cloning and building the git repo
+
+# Info for variables obtained from here
+# https://github.com/go-gitea/gitea/issues/30393
+
+on:
+  push:
+    branches:
+      - workflow-test
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Dependencies
+        image: docker.gitea.com/runner-images:ubuntu-latest
+        run: |
+          apt-get update && apt-get install -y cmake make g++ libncurses-dev
+
+      - name: Checkout Repository
+        run: |
+          git clone ${{ vars.GIT_REPO }} /workspace/${{ vars.REPO_AUTHOR }}/KCNet-Networking-CPP --recursive
+
+      - name: Verify Checkout
+        run: |
+          cd /workspace/${{ vars.REPO_AUTHOR }}/KCNet-Networking-CPP
+          echo "Current Directory:"
+          pwd
+          echo "Listing files:"
+          ls -la
+
+      - name: Build TcpClient and TcpServer
+        image: docker.gitea.com/runner-images:ubuntu-latest
+        run: |
+          cd /workspace/${{ vars.REPO_AUTHOR }}/KCNet-Networking-CPP
+          mkdir -p build && cd build  # Create and change to the build directory
+          cmake ..
+          make

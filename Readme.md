@@ -45,6 +45,13 @@ To test the TCP server messaging, now runs with `screen` on Linux.
 
 I will make a Dockerfile to build and test this project later.
 
+## GitHub Actions
+To setup the GitHub actions for the runner of this project if forking the project
+
+Set these values in the actions enviornment
+* GIT_REPO - Set this to your Git repo path, example for GitHub https://github.com/kelson8/KCNet-Networking-CPP.git
+* REPO_AUTHOR - Set this to your GitHub name
+
 # Libraries
 This project is using the base64 library which can be found with the below link.
 * https://github.com/tobiaslocker/base64
