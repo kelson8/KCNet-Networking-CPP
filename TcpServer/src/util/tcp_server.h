@@ -3,10 +3,9 @@
 #include <iostream>
 #include <string>
 
-
 #include <openssl/ssl.h>
 #include <openssl/err.h>
-
+#include <arpa/inet.h>
 
 #include "openssl_test.h"
 
@@ -26,6 +25,8 @@ public:
     const int GetServerFd() const;
     const int GetClientFd() const;
 
+    const std::string GetClientIp() const;
+
 
 private:
     TcpServer();
@@ -38,8 +39,13 @@ private:
     // const char *publicKeyFile;
     // const char *privateKeyFile;
 
+    void AcceptAll(int server_fd);
+    ssize_t SendNonBlocking(int fd, const char *buf, size_t len);
+
     int server_fd;
     int client_fd;
+
+    sockaddr_in client_address{};
 
 #ifdef SECURE_SERVER_TEST
     SSL_CTX *ctx;

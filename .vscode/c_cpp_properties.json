@@ -6,6 +6,7 @@
       "name": "Linux",
       "includePath": [
         "${default}",
+        "${workspaceFolder}/lib/base64/include",
         "${workspaceFolder}/TcpClient/src/util",
         "${workspaceFolder}/TcpServer/src",
         "${workspaceFolder}/TcpClient/src",

@@ -67,7 +67,7 @@ TcpServer::TcpServer()
 
 #else
     server_fd = opensslTest.create_tcp_socket(LISTEN_PORT);
-    // 
+    //
     // Non blocking test
     // https://stackoverflow.com/questions/1543466/how-do-i-change-a-tcp-socket-to-be-non-blocking
     // int status = fcntl(server_fd, F_SETFL, fcntl(server_fd, F_GETFL, 0) | O_NONBLOCK);
@@ -210,12 +210,86 @@ const int TcpServer::GetClientFd() const
 }
 
 /**
+ * Non blocking accept, TODO Fix this.
+ * https://oneuptime.com/blog/post/2026-03-20-non-blocking-tcp-socket-c/view
+ */
+void TcpServer::AcceptAll(int server_fd)
+{
+    while (1)
+    {
+        struct sockaddr_in client_address{};
+        socklen_t client_len = sizeof(client_address);
+
+        /* accept4() with SOCK_NONBLOCK sets the new socket non-blocking atomically */
+        // client_fd = accept4(server_fd, (struct sockaddr *)&client_address, &client_len, SOCK_NONBLOCK);
+        client_fd = accept4(server_fd, reinterpret_cast<sockaddr *>(&client_address), &client_len, SOCK_NONBLOCK);
+        if (client_fd < 0)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                break; /* no more pending connections */
+            }
+            perror("accept4");
+            break;
+        }
+        /* handle cfd (add to epoll/select, etc.) */
+    }
+}
+
+/**
+ * Non-blocking send() may write fewer bytes than requested (EAGAIN when buffer full).
+ * Retry with the unsent remainder.
+ * 
+ * This works for non-blocking send.
+*/
+ssize_t TcpServer::SendNonBlocking(int fd, const char *buf, size_t len)
+{
+    size_t sent = 0;
+    while (sent < len)
+    {
+        ssize_t s = send(fd, buf + sent, len - sent, 0);
+        if (s > 0)
+        {
+            sent += (size_t)s;
+        }
+        else if (s < 0)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                /* Socket send buffer full - register EPOLLOUT and retry later */
+                return (ssize_t)sent;
+            }
+            perror("send");
+            return -1;
+        }
+    }
+    return (ssize_t)sent;
+}
+
+/**
+ * Get the connecting client IP
+ * 
+ * https://stackoverflow.com/questions/3060950/how-to-get-ip-address-from-sock-structure-in-c
+ */
+const std::string TcpServer::GetClientIp() const
+{
+    // TODO Test this, not sure if this will work.
+    if (client_address.sin_family == NULL)
+        return "Invalid IP Address";
+
+    socklen_t client_len = sizeof(client_address);
+    char ip_address[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(client_address.sin_addr), ip_address, client_len);
+    return ip_address;
+}
+
+/**
  * Setup the connection to the client
  *
  * TODO Fix this to work here.
  * It gives a segfault if I try to use this for some reason.
  * Well it works as a void, but not an int.
- * 
+ *
  * TODO Fix this to only allow connections from specific IPs and methods, I can just send random
  *  requests with Postman to this.
  */
@@ -223,10 +297,12 @@ const int TcpServer::GetClientFd() const
 void TcpServer::SetupClientConnection()
 {
     // Connection from the client.
-    sockaddr_in client_address{};
+    // sockaddr_in client_address{};
     socklen_t client_len = sizeof(client_address);
-    // int client_fd = accept(server_fd, reinterpret_cast<sockaddr *>(&client_address), &client_len);
     client_fd = accept(server_fd, reinterpret_cast<sockaddr *>(&client_address), &client_len);
+
+    // TODO Fix this to work.
+    // AcceptAll(server_fd);
 
     if (client_fd < 0)
     {
@@ -235,6 +311,9 @@ void TcpServer::SetupClientConnection()
         return;
         // return EXIT_FAILURE;
     }
+
+    // Log the client IP, this works.
+    log_output("Client IP: ", GetClientIp());
 
     // auto ipAndPort = std::string(inet_ntoa(client_address.sin_addr)) + ":" + std::to_string(ntohs(client_address.sin_port));
     // log_output("Accepted TCP connection from {}: {}", ip, ntohs(client_addr.sin_port));
@@ -263,9 +342,24 @@ void TcpServer::ReadFromClient(int client_fd)
         log_output("Received: ", buffer);
         SSL_write(ssl, buffer, strlen(buffer));
 #else
-        log_output("Received: ", buffer);
-        Logger::getInstance().Log(LogLevel::LOG_INFO, "Received: " + std::string(buffer));
-        send(client_fd, buffer, static_cast<size_t>(bytes_read), 0);
+
+
+        // TODO Fix this to actually do something, possibly reload a config file.
+        // Dummy reload command
+        if(std::string(buffer) == "RELOAD")
+        {
+            log_output("Reload command received from client, reloading server...");
+        }
+        else
+        {
+            // Any message not listed above should also be logged.
+            log_output("Received: ", buffer);
+            Logger::getInstance().Log(LogLevel::LOG_INFO, "Received: " + std::string(buffer));
+        }
+
+        // Switched to using non blocking send command.
+        // send(client_fd, buffer, static_cast<size_t>(bytes_read), 0);
+        SendNonBlocking(client_fd, buffer, static_cast<size_t>(bytes_read));
 
 #endif
         // counter++;
@@ -306,20 +400,18 @@ int TcpServer::RunServer()
     // TODO Fix this to work.
     // client_fd = SetupClientConnection();
 
-
-
     // Well now, changing this from int to void fixed it? I'm not sure why...
     // Oh, maybe this was trying to connect to the client_fd set above..
+
+    // This is why this constantly gives the accept: Bad file descriptor errors I think.
+    // It keeps trying to loop and run this function..
+    // This only happens if I enable non blocking for the server though.
     SetupClientConnection();
 
     // Coroutine test
     // customAwaitable.TestCoroutine();
 
     ReadFromClient(client_fd);
-
-    // Close the socket
-    // No wonder this is exiting right after a connection, it closes the connection right here.
-    // TODO Make this able to receive multiple connections.
 
     return EXIT_SUCCESS;
 }
