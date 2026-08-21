@@ -21,7 +21,6 @@
 // TODO Look into this one later.
 // #include <fmt/os.h>
 
-
 // #include <cryptopp/base64.h>
 // #include <cryptopp/filters.h>
 
@@ -54,6 +53,13 @@ TcpServer::TcpServer()
 #else
     log_output("(INSECURE) Starting TCP socket without SSL for TcpServer.");
     Logger::getInstance().Log(LogLevel::LOG_INFO, "(INSECURE) Starting TCP socket without SSL for TcpServer.");
+
+    // Banned IP check
+    // Blank values for packet.
+    connectionPacket.isUserBanned = false;
+    connectionPacket.userIp = "";
+    // connectionPacket.sentMessage = "";
+
 #endif // SECURE_SERVER_TEST
 
 #ifdef SECURE_SERVER_TEST
@@ -100,6 +106,10 @@ TcpServer::~TcpServer()
 
     server_fd = 0;
     client_fd = 0;
+
+    // Reset all my values back to defaults.
+    connectionPacket.isUserBanned = false;
+    connectionPacket.userIp = "";
 
 // TODO Move this here
 #ifdef SECURE_SERVER_TEST
@@ -201,22 +211,6 @@ void TcpServer::RunServerSecure()
     // EVP_cleanup();     // Cleanup OpenSSL algorithms
 
 #endif // SECURE_SERVER_TEST
-}
-
-/**
- * Get the server fd value.
- */
-const int TcpServer::GetServerFd() const
-{
-    return server_fd;
-}
-
-/**
- * Get the client fd value.
- */
-const int TcpServer::GetClientFd() const
-{
-    return client_fd;
 }
 
 /**
@@ -324,7 +318,7 @@ void TcpServer::SetupClientConnection()
 
 /**
  * Get the banned IP list from the toml file.
- * 
+ *
  * TODO Set this up
  */
 // void TcpServer::GetBannedIPs()
@@ -337,13 +331,11 @@ void TcpServer::SetupClientConnection()
  */
 void TcpServer::ReadFromClient(int client_fd)
 {
-    // Banned IP check
-    bool isIpBanned = false;
 
     // Get the message from the client
     char buffer[1024] = {0};
 
-    const char* bannedMessage = "You attempted to connect from a banned IP.";
+    const char *bannedMessage = "You attempted to connect from a banned IP.";
 
 #ifdef SECURE_SERVER_TEST
     int bytes_read = SSL_read(ssl, buffer, sizeof(buffer) - 1);
@@ -363,15 +355,10 @@ void TcpServer::ReadFromClient(int client_fd)
         // This works for disabling messages from certain clients.
         // TODO Make this get a list of IP addresses to be banned, possibly make this check
         //  for a CIDR range such as 192.168.1.0/24 or something.
-        
+
         // TODO Look into this library and stackoverflow answer.
         // https://github.com/divy9881/IPParser
         // https://stackoverflow.com/questions/7213995/ip-cidr-match-function
-
-        // https://www.geeksforgeeks.org/cpp/vector-in-cpp-stl/
-        // std::vector<std::string> bannedClientIpVector;
-        // std::vector<std::string> bannedClientIpVector("192.168.1.81", "192.168.1.108");
-
 
         // This works for a banned IP list now!
         // I was not expecting to be able to figure this out.
@@ -381,7 +368,6 @@ void TcpServer::ReadFromClient(int client_fd)
         //  a list of banned IPs into memory or something to be cached on server startup.
         std::vector<std::string> bannedClientIpVector = {"192.168.1.81"};
 
-    
         // Print items out of vector
 #ifdef EXTRA_LOGS
         // fmt::print("[DBG]: bannedClientIpVector Size: {}\n", bannedClientIpVector.size());
@@ -391,31 +377,43 @@ void TcpServer::ReadFromClient(int client_fd)
         for (int x = 0; x < bannedClientIpVector.size(); x++)
         {
             bannedIp = bannedClientIpVector[x];
-            if(GetClientIp() == bannedIp)
+            if (GetClientIp() == bannedIp)
             {
 #ifdef EXTRA_LOGS
                 fmt::print("[DBG]: Banned IP {} attempted to connect to the server.\n", bannedIp);
                 // SendNonBlocking(client_fd, buffer, static_cast<size_t>(bytes_read));
                 SendNonBlocking(client_fd, bannedMessage, strlen(bannedMessage));
 #endif // EXTRA_LOGS
-                isIpBanned = true;
+                connectionPacket.isUserBanned = true;
                 // return;
             }
         }
 
-        if(isIpBanned)
+        if (connectionPacket.isUserBanned)
         {
             // Do nothing if IP is banned.
             // fmt::print("[DBG]: Blocked connection from banned IP.\n");
             return;
         }
 
+        // Store the users IP.
+        connectionPacket.userIp = GetClientIp();
+
         // TODO Fix this to actually do something, possibly reload a config file.
+        // TODO Make this log which IP address reloaded the server.
         // Dummy reload command
         if (std::string(buffer) == "RELOAD")
         {
-            log_output("Reload command received from client, reloading server...");
-        }
+            if (connectionPacket.userIp == "")
+            {
+                fmt::print("The users IP address was not found! Attempting to reload server...\n");
+            }
+            else
+            {
+                fmt::print("User with IP address of {} has sent the reload command to the server.\n", connectionPacket.userIp);
+                // log_output("Reload command received from client, reloading server...");
+            }
+                }
         else
         {
             // Any message not listed above should also be logged.

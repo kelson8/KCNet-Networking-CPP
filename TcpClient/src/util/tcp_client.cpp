@@ -274,7 +274,7 @@ int TcpClient::ConnectToServer()
         // fmt::println("Server replied: {}", buffer);
         if(std::string(buffer) == bannedMessage)
         {
-            // log_output("You have been banned from this server.");
+            log_output("You have been banned from this server.");
             return EXIT_FAILURE;
         } 
         else 
