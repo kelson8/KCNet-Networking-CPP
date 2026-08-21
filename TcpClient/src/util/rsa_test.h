@@ -2,6 +2,8 @@
 
 #include "defines.h"
 
+// TODO Fix this to work in Windows.
+
 #ifdef __linux__
 
 #include <openssl/ssl.h>
@@ -11,6 +13,8 @@
 #include <openssl/pem.h>
 
 #endif // __linux__
+
+#ifdef __linux__
 
 class RsaTest {
 
@@ -43,3 +47,5 @@ private:
     EVP_PKEY &CreatePrivateKey();
 #endif // __linux__
 };
+
+#endif // __linux__

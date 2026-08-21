@@ -239,13 +239,9 @@ std::string Urandom::GenerateRandom(size_t numNumbers, size_t numLetters, size_t
     // return 0;
 }
 
-#endif // __linux__
-
-
-
 void Urandom::Run()
 {
-#ifdef __linux__
+
     // Urandom urandom;
     // https://stackoverflow.com/questions/2572366/how-to-use-dev-random-or-urandom-in-c
     // char myRandomData[50];
@@ -258,9 +254,8 @@ void Urandom::Run()
 
     // ValueToHex(myRandomData);
 
-#endif // __linux__
+
 
 }
 
-
-
+#endif // __linux__

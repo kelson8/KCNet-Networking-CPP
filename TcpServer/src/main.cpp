@@ -1,14 +1,19 @@
 
+#include <string>
+#include "defines.h"
+
 #ifdef __linux__
 // TODO Look into this later.
 // https://github.com/embeddedmz/socket-cpp
 
-#include "defines.h"
 #include "openssl_test.h"
 #include "file_functions.h"
 #include "toml_handler.h"
 
 #include "tcp_server.h"
+
+// TODO Add this to Git
+// #include "command_system.h"
 
 #include <thread>
 #include <bits/stdc++.h>
@@ -60,7 +65,6 @@ TODO Automate copying keys into build folder later for testing.
 */
 
 // bool runProgram = true;
-// int programValue = 0;
 
 #ifdef __linux__
 
@@ -82,10 +86,12 @@ void got_signal(int)
 
 #endif // __linux__
 
-int main()
+int main(int argc, char *argv[])
 {
 
 #ifdef __linux__
+
+    // log_output("Program PID is: ", get_program_pid());
 
     // For destructor calling with SIGINT on Linux
     struct sigaction sa;
@@ -93,6 +99,11 @@ int main()
     sa.sa_handler = got_signal;
     sigfillset(&sa.sa_mask);
     sigaction(SIGINT, &sa, NULL);
+    //
+
+    // TODO Add this to Git
+    // Command argument system, this will eventually be able to set the IP, port, and config file location.
+    // CommandSystem::ArghCommandSystem(argc, argv);
     //
 
     // TODO Implement multithreading for this.
@@ -131,6 +142,7 @@ int main()
         // }
 
         // Get the values from the TcpServer file.
+        // This runs after the RunServer gets a message.
         // log_output("ServerFD value: ", tcpServer.GetServerFd());
         // log_output("ClientFD value: ", tcpServer.GetClientFd());
 

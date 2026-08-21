@@ -77,8 +77,10 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 # https://stackoverflow.com/questions/45548088/include-openssl-in-a-cmakelist-txt-file
 if(UNIX)
     find_package(OpenSSL REQUIRED)
+endif()
+
     # find_package(cryptopp-modern REQUIRED)
-    target_link_libraries(${PROJECT_NAME}
+    target_link_libraries(${PROJECT_NAME} PRIVATE
         OpenSSL::SSL
         # cryptopp-modern
         base64
@@ -88,8 +90,9 @@ if(UNIX)
         # Formatting
         fmt::fmt
     )
-endif()
 
-# target_link_libraries(${PROJECT_NAME}
-    
-# )
+if(WIN32)
+	find_package(OpenSSL REQUIRED COMPONENTS Crypto)
+	target_link_libraries(${PROJECT_NAME} PRIVATE 
+	OpenSSL::Crypto)
+endif()

@@ -1,10 +1,10 @@
 
+#include "defines.h"
+#include "urandom_test.h"
+
 #ifdef __linux__
 #include <string>
 
-#include "urandom_test.h"
-
-#include "defines.h"
 #include "tcp_client.h"
 
 #include "base64.hpp"
