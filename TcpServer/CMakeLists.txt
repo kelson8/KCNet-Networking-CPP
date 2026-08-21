@@ -85,6 +85,8 @@ if(UNIX)
         tomlplusplus::tomlplusplus
         # Logging
         spdlog::spdlog
+        # Formatting
+        fmt::fmt
     )
 endif()
 

@@ -4,6 +4,9 @@
 #include <format>
 #include <string>
 
+// Enable extra debug logging for the server
+#define EXTRA_LOGS
+
 // Listen port for server
 #define LISTEN_PORT 8055
 

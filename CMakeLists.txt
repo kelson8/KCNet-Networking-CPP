@@ -7,6 +7,26 @@ project(KCNet-Networking-CPP)
 
 include(FetchContent)
 
+#-------------
+# Fmt
+#-------------
+
+FetchContent_Declare(fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+  GIT_TAG        12.2.0
+  GIT_PROGRESS   TRUE
+  GIT_SHALLOW    TRUE
+)
+
+# This is required to be set for fmt being here for certain builds.
+set(OLD_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+
+FetchContent_MakeAvailable(fmt)
+
+# Reset the flags back to normal.
+set(CMAKE_CXX_FLAGS "${OLD_CMAKE_CXX_FLAGS}")
+
 #---------
 # Tomlplusplus
 # TODO Use this later.

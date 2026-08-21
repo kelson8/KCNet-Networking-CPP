@@ -1,23 +1,24 @@
 {
-
-  // Currently this project is only supported on Linux.
-  "configurations": [
-    {
-      "name": "Linux",
-      "includePath": [
-        "${default}",
-        "${workspaceFolder}/lib/base64/include",
-        "${workspaceFolder}/TcpClient/src/util",
-        "${workspaceFolder}/TcpServer/src",
-        "${workspaceFolder}/TcpClient/src",
-        "${workspaceFolder}/TcpServer/src/util"
-      ],
-      "defines": [],
-      "compilerPath": "/usr/bin/gcc",
-      "compilerArgs": ["-ggdb"],
-      "cStandard": "gnu11",
-      "cppStandard": "gnu++20"
-    }
-  ],
-  "version": 4
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${default}",
+                "${workspaceFolder}/lib/base64/include",
+                "${workspaceFolder}/TcpClient/src/util",
+                "${workspaceFolder}/TcpServer/src",
+                "${workspaceFolder}/TcpClient/src",
+                "${workspaceFolder}/TcpServer/src/util",
+                "${workspaceFolder}/build/_deps/fmt-src/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "compilerArgs": [
+                "-ggdb"
+            ],
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++20"
+        }
+    ],
+    "version": 4
 }

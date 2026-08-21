@@ -217,6 +217,9 @@ int TcpClient::ConnectToServer()
 
     // Now this sends a value from /dev/urandom to the server.
     const char *message = randomValue.c_str();
+
+    // Send the reload message.
+    // const char *message = "RELOAD";
     
     // Struct testing
     // RsaMessageEncrypt rsaEncrypt;

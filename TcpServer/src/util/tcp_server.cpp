@@ -12,6 +12,16 @@
 
 #include <fcntl.h>
 
+// #include <format>
+
+// https://hackingcpp.com/cpp/libs/fmt
+#include <fmt/format.h>
+#include <fmt/chrono.h>
+#include <fmt/compile.h>
+// TODO Look into this one later.
+// #include <fmt/os.h>
+
+
 // #include <cryptopp/base64.h>
 // #include <cryptopp/filters.h>
 
@@ -239,9 +249,9 @@ void TcpServer::AcceptAll(int server_fd)
 /**
  * Non-blocking send() may write fewer bytes than requested (EAGAIN when buffer full).
  * Retry with the unsent remainder.
- * 
+ *
  * This works for non-blocking send.
-*/
+ */
 ssize_t TcpServer::SendNonBlocking(int fd, const char *buf, size_t len)
 {
     size_t sent = 0;
@@ -268,13 +278,13 @@ ssize_t TcpServer::SendNonBlocking(int fd, const char *buf, size_t len)
 
 /**
  * Get the connecting client IP
- * 
+ *
  * https://stackoverflow.com/questions/3060950/how-to-get-ip-address-from-sock-structure-in-c
  */
 const std::string TcpServer::GetClientIp() const
 {
     // TODO Test this, not sure if this will work.
-    if (client_address.sin_family == NULL)
+    if (client_address.sin_family == 0)
         return "Invalid IP Address";
 
     socklen_t client_len = sizeof(client_address);
@@ -313,7 +323,7 @@ void TcpServer::SetupClientConnection()
     }
 
     // Log the client IP, this works.
-    log_output("Client IP: ", GetClientIp());
+    // log_output("Client IP: ", GetClientIp());
 
     // auto ipAndPort = std::string(inet_ntoa(client_address.sin_addr)) + ":" + std::to_string(ntohs(client_address.sin_port));
     // log_output("Accepted TCP connection from {}: {}", ip, ntohs(client_addr.sin_port));
@@ -321,12 +331,31 @@ void TcpServer::SetupClientConnection()
 }
 
 /**
+ * Get the banned IP list from the toml file.
+ * 
+ * TODO Set this up
+ */
+// void TcpServer::GetBannedIPs()
+// {
+
+// }
+
+/**
  * Read the message from the client.
  */
 void TcpServer::ReadFromClient(int client_fd)
 {
+    // Banned IP check
+    bool isIpBanned = false;
+
     // Get the message from the client
     char buffer[1024] = {0};
+
+    // Blank message
+    char blankMessage[1] = "";
+
+    // char bannedMessage[] = "You attempted to connect from a banned IP.";
+    const char* bannedMessage = "You attempted to connect from a banned IP.";
 
 #ifdef SECURE_SERVER_TEST
     int bytes_read = SSL_read(ssl, buffer, sizeof(buffer) - 1);
@@ -343,10 +372,71 @@ void TcpServer::ReadFromClient(int client_fd)
         SSL_write(ssl, buffer, strlen(buffer));
 #else
 
+        // This works for disabling messages from certain clients.
+        // TODO Make this get a list of IP addresses to be banned, possibly make this check
+        //  for a CIDR range such as 192.168.1.0/24 or something.
+        
+        // TODO Look into this library and stackoverflow answer.
+        // https://github.com/divy9881/IPParser
+        // https://stackoverflow.com/questions/7213995/ip-cidr-match-function
+
+        // https://www.geeksforgeeks.org/cpp/vector-in-cpp-stl/
+        // std::vector<std::string> bannedClientIpVector;
+        // std::vector<std::string> bannedClientIpVector("192.168.1.81", "192.168.1.108");
+
+
+        // This works for a banned IP list now!
+        // I was not expecting to be able to figure this out.
+        // Now, onto working on getting this to work with CIDR addresses and IPv6 later on.
+        // std::vector<std::string> bannedClientIpVector = {"192.168.1.81", "192.168.1.108"};
+        // TODO Make this get banned IPs from toml config.
+        // TODO Move this out of the ReadFromClient function and have it load
+        //  a list of banned IPs into memory or something to be cached on server startup.
+        std::vector<std::string> bannedClientIpVector = {"192.168.1.81"};
+
+    
+        // Print items out of vector
+#ifdef EXTRA_LOGS
+        // fmt::print("[DBG]: bannedClientIpVector Size: {}\n", bannedClientIpVector.size());
+        // fmt::print("[DBG]: Attempting to print list of banned ips from vector\n");
+#endif // EXTRA_LOGS
+        std::string bannedIp;
+        for (int x = 0; x < bannedClientIpVector.size(); x++)
+        {
+            bannedIp = bannedClientIpVector[x];
+            if(GetClientIp() == bannedIp)
+            {
+#ifdef EXTRA_LOGS
+                fmt::print("[DBG]: Banned IP {} attempted to connect to the server.\n", bannedIp);
+                // SendNonBlocking(client_fd, bannedMessage, static_cast<size_t>(bannedMessage));
+                SendNonBlocking(client_fd, bannedMessage, sizeof(bannedMessage));
+#endif // EXTRA_LOGS
+                isIpBanned = true;
+                // return;
+            }
+        }
+
+
+        // ubuntu-server.lan 192.168.1.81
+        // Desktop for testing.
+        // std::string bannedClientIp = "192.168.1.108";
+        // if (GetClientIp() == bannedClientIp)
+        // {
+        //     log_output("Recieved command from banned client");
+        //     Logger::getInstance().Log(LogLevel::LOG_INFO, "Received command from banned client with IP: " + bannedClientIp);
+        //     SendNonBlocking(client_fd, buffer, static_cast<size_t>(bytes_read));
+        //     return;
+        // }
+
+        if(isIpBanned)
+        {
+            fmt::print("[DBG]: Blocked connection from banned IP.\n");
+            return;
+        }
 
         // TODO Fix this to actually do something, possibly reload a config file.
         // Dummy reload command
-        if(std::string(buffer) == "RELOAD")
+        if (std::string(buffer) == "RELOAD")
         {
             log_output("Reload command received from client, reloading server...");
         }
