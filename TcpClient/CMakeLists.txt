@@ -66,6 +66,7 @@ if(UNIX)
         # TODO Fix this library.
         # TinyRSA
         # socket
+        fmt::fmt
     )
 endif()
 

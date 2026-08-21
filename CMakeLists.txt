@@ -67,6 +67,12 @@ add_subdirectory(lib/base64)
 
 # Tcp client and server.
 add_subdirectory(TcpClient)
+# Setup argh for Client
+target_include_directories(tcp-client PUBLIC
+  lib/argh)
 
 add_subdirectory(TcpServer)
+# Setup argh for Server
+target_include_directories(tcp-server PUBLIC
+  lib/argh)
 

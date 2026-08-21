@@ -300,14 +300,13 @@ const std::string TcpServer::GetClientIp() const
  * It gives a segfault if I try to use this for some reason.
  * Well it works as a void, but not an int.
  *
- * TODO Fix this to only allow connections from specific IPs and methods, I can just send random
+ * TODO Fix this to only allow connections from request methods such as GET or POST, I can just send random
  *  requests with Postman to this.
  */
 // int TcpServer::SetupClientConnection()
 void TcpServer::SetupClientConnection()
 {
     // Connection from the client.
-    // sockaddr_in client_address{};
     socklen_t client_len = sizeof(client_address);
     client_fd = accept(server_fd, reinterpret_cast<sockaddr *>(&client_address), &client_len);
 
@@ -321,13 +320,6 @@ void TcpServer::SetupClientConnection()
         return;
         // return EXIT_FAILURE;
     }
-
-    // Log the client IP, this works.
-    // log_output("Client IP: ", GetClientIp());
-
-    // auto ipAndPort = std::string(inet_ntoa(client_address.sin_addr)) + ":" + std::to_string(ntohs(client_address.sin_port));
-    // log_output("Accepted TCP connection from {}: {}", ip, ntohs(client_addr.sin_port));
-    // log_output("Accepted TCP connection from ", ipAndPort);
 }
 
 /**
@@ -351,10 +343,6 @@ void TcpServer::ReadFromClient(int client_fd)
     // Get the message from the client
     char buffer[1024] = {0};
 
-    // Blank message
-    char blankMessage[1] = "";
-
-    // char bannedMessage[] = "You attempted to connect from a banned IP.";
     const char* bannedMessage = "You attempted to connect from a banned IP.";
 
 #ifdef SECURE_SERVER_TEST
@@ -388,7 +376,6 @@ void TcpServer::ReadFromClient(int client_fd)
         // This works for a banned IP list now!
         // I was not expecting to be able to figure this out.
         // Now, onto working on getting this to work with CIDR addresses and IPv6 later on.
-        // std::vector<std::string> bannedClientIpVector = {"192.168.1.81", "192.168.1.108"};
         // TODO Make this get banned IPs from toml config.
         // TODO Move this out of the ReadFromClient function and have it load
         //  a list of banned IPs into memory or something to be cached on server startup.
@@ -408,29 +395,18 @@ void TcpServer::ReadFromClient(int client_fd)
             {
 #ifdef EXTRA_LOGS
                 fmt::print("[DBG]: Banned IP {} attempted to connect to the server.\n", bannedIp);
-                // SendNonBlocking(client_fd, bannedMessage, static_cast<size_t>(bannedMessage));
-                SendNonBlocking(client_fd, bannedMessage, sizeof(bannedMessage));
+                // SendNonBlocking(client_fd, buffer, static_cast<size_t>(bytes_read));
+                SendNonBlocking(client_fd, bannedMessage, strlen(bannedMessage));
 #endif // EXTRA_LOGS
                 isIpBanned = true;
                 // return;
             }
         }
 
-
-        // ubuntu-server.lan 192.168.1.81
-        // Desktop for testing.
-        // std::string bannedClientIp = "192.168.1.108";
-        // if (GetClientIp() == bannedClientIp)
-        // {
-        //     log_output("Recieved command from banned client");
-        //     Logger::getInstance().Log(LogLevel::LOG_INFO, "Received command from banned client with IP: " + bannedClientIp);
-        //     SendNonBlocking(client_fd, buffer, static_cast<size_t>(bytes_read));
-        //     return;
-        // }
-
         if(isIpBanned)
         {
-            fmt::print("[DBG]: Blocked connection from banned IP.\n");
+            // Do nothing if IP is banned.
+            // fmt::print("[DBG]: Blocked connection from banned IP.\n");
             return;
         }
 
@@ -452,8 +428,6 @@ void TcpServer::ReadFromClient(int client_fd)
         SendNonBlocking(client_fd, buffer, static_cast<size_t>(bytes_read));
 
 #endif
-        // counter++;
-        // log_output("Counter value: ", counter);
     }
 }
 
@@ -468,9 +442,6 @@ int TcpServer::RunServer()
 {
     OpensslTest opensslTest;
     // CustomAwaitable customAwaitable;
-
-    // int counter = 1;
-    // log_output("Counter value: ", counter);
 
     //-----------
     // Original methods, working.

@@ -9,7 +9,8 @@
                 "${workspaceFolder}/TcpServer/src",
                 "${workspaceFolder}/TcpClient/src",
                 "${workspaceFolder}/TcpServer/src/util",
-                "${workspaceFolder}/build/_deps/fmt-src/include"
+                "${workspaceFolder}/build/_deps/fmt-src/include",
+                "${workspaceFolder}/lib/argh"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

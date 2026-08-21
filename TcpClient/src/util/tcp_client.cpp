@@ -19,6 +19,8 @@
 
 #include <string>
 
+#include <fmt/format.h>
+
 #include "urandom_test.h"
 
 #include "defines.h"
@@ -176,6 +178,12 @@ int TcpClient::ConnectToServer()
 
     FileFunctions &fileFunctions = FileFunctions::getInstance();
 
+    // This banned message is required to be the same as the server bannedMessage.
+    // If not, the user will still be banned but this will display:
+    //  'Message sent' instaed of the banned message.
+    // TODO Make this a bit better, I will come up with a different solution later.
+    const char* bannedMessage = "You attempted to connect from a banned IP.";
+
     // TODO Fix this, it gives invalid conversion from const char* to const unsigned char*
     // EncryptionPacket packet;
     // // const char* packetText = "Test Key, will need to be read from file";
@@ -256,10 +264,27 @@ int TcpClient::ConnectToServer()
     ssize_t bytes_read = recv(sock, buffer, sizeof(buffer) - 1, 0);
     if (bytes_read > 0)
     {
-        // std::cout << "Server replied: " << buffer << "\n";
-        // log_output("Sent message to server: ", buffer);
-        log_output("Sent message to server.");
-        return EXIT_SUCCESS;
+
+        // If the banned message is the same, this is just a very basic ban system.
+        // TODO Make this ban system a bit better.
+        // If the client is banned but the message is different,
+        //  this will still say 'Sent message to server."
+        
+        // Display the message out of the buffer directly for testing.
+        // fmt::println("Server replied: {}", buffer);
+        if(std::string(buffer) == bannedMessage)
+        {
+            // log_output("You have been banned from this server.");
+            return EXIT_FAILURE;
+        } 
+        else 
+        {
+            // To include the message in the output, use this below.
+            // log_output("Sent message to server: ", buffer);
+            log_output("Sent message to server.");
+            return EXIT_SUCCESS;
+        }
+
     }
 
     close(sock);
