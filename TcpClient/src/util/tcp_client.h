@@ -26,8 +26,12 @@ public:
     }
 
     void ConnectToServerSecure();
-    // int ConnectToServer();
+
+#ifdef WXWIDGETS_GUI
     int ConnectToServer(ServerCommand command);
+#else
+    int ConnectToServer();
+#endif // WXWIDGETS_GUI
 
 private:
     TcpClient();

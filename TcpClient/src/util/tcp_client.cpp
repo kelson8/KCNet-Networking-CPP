@@ -230,7 +230,11 @@ int TcpClient::ConnectToServer()
     // const char *message = "Hello from client";
 
     // Now this sends a value from /dev/urandom to the server.
-    // const char *message = randomValue.c_str();
+
+#ifndef WXWIDGETS_GUI
+    const char *message = randomValue.c_str();
+#endif // !WXWIDGETS_GUI
+
     const char *randomMessage = randomValue.c_str();
 
     // Send the reload command.
@@ -267,6 +271,7 @@ int TcpClient::ConnectToServer()
     //     return;
     // }
 
+#ifdef WXWIDGETS_GUI
     switch (command)
     {
     case URANDOM_MESSAGE:
@@ -286,8 +291,11 @@ int TcpClient::ConnectToServer()
         break;
     }
 
+#else
     // Original working method.
-    // SendMessageToServer(sock, message, strlen(message));
+    SendMessageToServer(sock, message, strlen(message));
+
+#endif // WXWIDGETS_GUI
 
     // Read the bytes back from the server, or say message was sent.
     char buffer[1024] = {0};
