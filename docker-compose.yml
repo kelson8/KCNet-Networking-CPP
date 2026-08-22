@@ -1,0 +1,26 @@
+# Docker compose for running the test TcpServer in C++. 
+# You will need to change the network name for this to match your setup.
+
+services:
+  kcnet-networking-server:
+    container_name: KCNet-Networking-Server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # This is not required for this project, gets included with the Dockerfile.
+    # volumes:
+      # - .:/KCNet-Networking-CPP
+    ports:
+      - 8055:8055
+    networks:
+      - testing
+
+    # Run the tcp-server command.
+    command: /bin/bash -c "/KCNet-Networking-CPP/bin/tcp-server"
+    
+    # Run the tcp-client command.
+    # command: /bin/bash -c "/KCNet-Networking-CPP/bin/tcp-client"
+
+networks:
+  testing:
+    external: true

@@ -91,14 +91,27 @@ so this just sends all data in plain text.
 
 ## Running
 
-To run the projects on their own:
+**Without Docker**
+
+To run the projects on their own
 * `./run-projects.sh TcpServer` - To start the server.
 * `./run-projects.sh TcpClient` - To connect to the server and send a message from the code.
 
 To test the TCP server messaging, now runs with `screen` on Linux.
 * Run `./test-tcp.sh`
 
-I will make a Dockerfile to build and test this project later.
+**With Docker**
+
+To build this with Docker
+```bash
+docker build -t kcnet-networking-cpp:0.0.1a .
+```
+
+You can run the test server with docker compose, this runs the tcp-server for testing, and the client can send text or commands to this server.
+```bash
+# Run this to start the test server and be able to close it easily.
+docker compose up
+```
 
 ## GitHub Actions
 To setup the GitHub actions for the runner of this project if forking the project

@@ -1,0 +1,11 @@
+.gitea/
+.github/
+.vscode/
+build/
+bin/
+
+TcpClient/build
+TcpServer/build
+
+Jenkinsfile
+*.log
