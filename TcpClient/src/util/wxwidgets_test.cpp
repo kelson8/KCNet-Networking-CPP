@@ -4,10 +4,14 @@
 #include "urandom_test.h"
 
 #include "tcp_client.h"
+#include <fmt/format.h>
 
 #ifdef WXWIDGETS_GUI
 #include <wx/wx.h>
-// #include "logo.h"
+#include <wx/frame.h>
+#include <wx/filename.h>
+#include <wx/image.h>
+#include <wx/stdpaths.h>
 #endif // WXWIDGETS_GUI
 
 // When this is enabled, it disables 'int main' in main.cpp and switches this to the new main file.
@@ -68,14 +72,27 @@ wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
 // 'Main program' equivalent: the program execution "starts" here
 bool MyApp::OnInit()
 {
+
+    // TODO Try to fix this to work
+    // This should log if the GUI is enabled or not, if it isn't then it's using console mode.
+    // https://stackoverflow.com/questions/13204177/how-to-find-out-if-running-from-terminal-or-gui
+    // if (NULL == getenv("DISPLAY"))
+    // std::cout << "Gui is not enabled.";
+    // else
+    // std::cout << "Gui is enabled.";
+
     // call the base class initialization method, currently it only parses a
     // few common command-line options but it could be do more in the future
     if (!wxApp::OnInit())
         return false;
 
     // create the main application window
-    // MyFrame *frame = new MyFrame("Minimal wxWidgets App");
     MyFrame *frame = new MyFrame(PROGRAM_NAME);
+
+    // Add the logo for TcpClient
+    // https://github.com/gammasoft71/Examples_wxWidgets/blob/master/wxCore/Applications/ApplicationIcon/ApplicationIcon.cpp
+    frame->SetProgramLogo(frame);
+    //
 
     // and show it (the frames, unlike simple controls, are not shown when
     // created initially)
@@ -95,12 +112,9 @@ bool MyApp::OnInit()
 // Disabled window resizing for now
 // https://forums.wxwidgets.org/viewtopic.php?t=6349
 MyFrame::MyFrame(const wxString &title)
-    : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX))
+    : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)),
+      logoSetup(false)
 {
-    // set the frame icon
-    // SetIcon(wxICON(sample));
-    // SetIcon(wxICON(KELSONCRAFT_LOGO));
-
     // Set the window size
     SetClientSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
@@ -149,6 +163,12 @@ MyFrame::MyFrame(const wxString &title)
     // If the buttons have panel1 set, the sizer has to use panel1 instead of 'this'
     wxPanel *panel1 = new wxPanel(this, wxID_ANY);
 
+    // Set the background and foreground color
+    // https://docs.wxwidgets.org/latest/classwx_colour_database.html
+    // panel1->SetBackgroundColour({wxTheColourDatabase->Find("Navy")});
+    // panel1->SetBackgroundColour({wxTheColourDatabase->Find("Firebrick")});
+    // panel1->SetForegroundColour();
+
     // TODO Make these buttons look a bit nicer on here.
     // TODO Make these buttons not resize and be giant with the screen.
 
@@ -164,38 +184,73 @@ MyFrame::MyFrame(const wxString &title)
     //-------
     // TCPClient message sending to TcpServer.
     //-------
-    // https://github.com/gammasoft71/Examples_wxWidgets/blob/master/wxCore/Controls/Choice/Choice.cpp
-    tcpMessageChoice = new wxChoice(panel1, ID_MESSAGE_CHOICE);
-    tcpMessageChoice->Append(LAST_COMMAND, std::vector<wxString>{
-                           "Send /dev/urandom generator Message", // 0
-                           "Reload command",                      // 1
-                           "Shutdown command"                     // 2
-                       }
-                           .data());
 
-    tcpMessageChoice->SetSelection(0);
-    tcpMessageChoice->Bind(wxEVT_CHOICE, &MyFrame::OnChoiceClick, this);
+    if (!SetupTcpClientCommands(panel1))
+    {
+        fmt::print("SetupTcpClientCommands() didn't run correctly! Exiting Client.\n");
+        exit(EXIT_FAILURE);
+    }
 
-    // https://github.com/gammasoft71/Examples_wxWidgets/blob/master/wxCore/Controls/Button/Button.cpp
-    currentChoiceBtn = new wxButton(panel1, ID_SEND_MESSAGE_BTN, "Send message");
-    currentChoiceBtn->Bind(wxEVT_BUTTON, [&](wxCommandEvent &event)
-                           {
-        // Print out the current selected choice number, starting from 0.
-        // std::cout << "Current choice selected: " << tcpMessageChoice->GetCurrentSelection() << std::endl; 
-        TcpClient::getInstance().ConnectToServer(static_cast<ServerCommand>(tcpMessageChoice->GetCurrentSelection()));
-    });
-
+    //-------
     // Text testing
     // https://docs.wxwidgets.org/stable/classwx_static_text.html
-    // wxStaticText *text = new wxStaticText(panel1, ID_STATIC_TEXT_TEST1, "Test text");
+    // Moving this into the header fixes it, if I keep the pointer in this constructor it crashes.
+    // text = new wxStaticText(panel1, ID_STATIC_TEXT_TEST1, "Test text");
 
-    // TODO Fix this, why does it crash?
+    // This now works for updating the text on the screen, I could use this for messages sent from
+    //  the server.
     // wxButton *updateTestTextBtn = new wxButton(panel1, ID_UPDATE_TEST_TEXT_BTN, "Update test text");
     // updateTestTextBtn->Bind(wxEVT_BUTTON, [&](wxCommandEvent &event)
-    //                         { 
-    //                             // text->SetLabel(wxString("New test text")); 
-    //                             text->SetLabel(wxT("New test text")); 
-    //                         });
+                            // { text->SetLabel(wxT("New test text")); });
+
+    //------
+    // Bitmap testing
+    // Taken from here
+    // https://github.com/bartoszwarzocha/wxwidgets_book_examples/blob/master/Hangman%20game/Common/main.cpp
+    //------
+
+    // wxStaticBitmap *bitmapTest = new wxStaticBitmap(panel1, wxID_ANY, wxNullBitmap, wxDefaultPosition, wxDefaultSize,
+    //     wxBORDER_SIMPLE);
+
+    // // Create context...
+    // int bitmapHeight = 10;
+    // int bitmapWidth = 300;
+
+    // wxBitmap bmp(wxSize(bitmapWidth, bitmapHeight));
+    // wxMemoryDC dc(bmp);
+    // dc.SetBackground(*wxWHITE_BRUSH);
+    // dc.Clear();
+
+    // bitmapTest->SetBitmap(bmp);
+
+    //------
+    // Text control
+    // This looks like I can use this for text inputs.
+    // TODO Make a limit for the text with this.
+    // https://github.com/gammasoft71/Examples_wxWidgets/blob/master/wxCore/Others/DisplayInformations/DisplayInformations.cpp
+    //------
+
+    long textStyle = wxTE_MULTILINE | wxTE_READONLY;
+
+    // Add a flag
+    // textStyle |= wxTE_RICH2;
+    // Remove a flag
+    // textStyle &= ~wxTE_READONLY;
+
+    // textControlTest = new wxTextCtrl(panel1, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, textStyle);
+
+    // textControlTest->AppendText(wxString::Format("Test number: %d", 2));
+    // textControlTest->AppendText(wxString::Format("Test number: %d", 2));
+
+    //------
+    // Password hiding
+    // TODO Fix this, it keeps crashing.
+    // https://github.com/gammasoft71/Examples_wxWidgets/blob/master/wxCore/Others/TextEntryDialogPassword/TextEntryDialogPassword.cpp
+    //------
+
+    // passwordLabel->SetLabel(wxT("Test Password..."));
+    // passwordEntry = new wxTextEntryDialog(this, "user: admin", "User password", passwordLabel->GetLabel(), wxTextEntryDialogStyle|wxTE_PASSWORD);
+    // passwordEntry = new wxTextEntryDialog(this, "user: admin", "User password", "Test", wxTextEntryDialogStyle|wxTE_PASSWORD);
 
     //------
     // Align the buttons, text and other items
@@ -207,18 +262,86 @@ MyFrame::MyFrame(const wxString &title)
     // sizer->Add(dialogTestBtn, 1, wxALIGN_RIGHT, 0, 0);
     // sizer->Add(dialogTestBtn, 1, wxALIGN_CENTER, 0, 0);
     // sizer->Add(dialogTestBtn, 1, wxALIGN_LEFT, 0, 0);
-    sizer->Add(tcpMessageChoice, 1, wxALIGN_LEFT);
-    sizer->Add(currentChoiceBtn, 1, wxALIGN_LEFT);
+
+    if(tcpMessageChoice && currentChoiceBtn)
+    {
+        sizer->Add(tcpMessageChoice, 1, wxALIGN_LEFT);
+        sizer->Add(currentChoiceBtn, 1, wxALIGN_LEFT);
+    }
 
     // Future testing
     // sizer->Add(text, 1, wxALIGN_CENTER);
     // sizer->Add(updateTestTextBtn, 1, wxALIGN_CENTER);
+
+    // sizer->Add(bitmapTest, 1, wxALIGN_RIGHT);
+    // sizer->Add(textControlTest, 1, wxALIGN_RIGHT);
 
     // Required if using the window directly for this.
     // this->SetSizer(sizer);
 
     // Required if using the panel
     panel1->SetSizer(sizer);
+    sizer->Show(true);
+
+    // CenterOnScreen();
+}
+
+/**
+ * Setup the client TCP commands message choices and send message button.
+ * TODO Fix this to have better error handling.
+ */
+bool MyFrame::SetupTcpClientCommands(wxPanel *panel)
+{
+    //-------
+    // TCPClient message sending to TcpServer.
+    //-------
+    // https://github.com/gammasoft71/Examples_wxWidgets/blob/master/wxCore/Controls/Choice/Choice.cpp
+    tcpMessageChoice = new wxChoice(panel, ID_MESSAGE_CHOICE);
+    tcpMessageChoice->Append(LAST_COMMAND, std::vector<wxString>{
+                                               "Send /dev/urandom generator Message", // 0
+                                               "Reload command",                      // 1
+                                               "Shutdown command"                     // 2
+                                           }
+                                               .data());
+
+    tcpMessageChoice->SetSelection(0);
+    tcpMessageChoice->Bind(wxEVT_CHOICE, &MyFrame::OnChoiceClick, this);
+
+    // https://github.com/gammasoft71/Examples_wxWidgets/blob/master/wxCore/Controls/Button/Button.cpp
+    currentChoiceBtn = new wxButton(panel, ID_SEND_MESSAGE_BTN, "Send message");
+    currentChoiceBtn->Bind(wxEVT_BUTTON, [&](wxCommandEvent &event)
+                           {
+        // Print out the current selected choice number, starting from 0.
+        // std::cout << "Current choice selected: " << tcpMessageChoice->GetCurrentSelection() << std::endl; 
+        TcpClient::getInstance().ConnectToServer(static_cast<ServerCommand>(tcpMessageChoice->GetCurrentSelection())); });
+
+    // Some error handling for this
+    if (!tcpMessageChoice || !currentChoiceBtn)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Set the program logo
+ */
+void MyFrame::SetProgramLogo(MyFrame *frame)
+{
+    // Do nothing if logo is already set.
+    if (logoSetup)
+        return;
+
+    wxImage::AddHandler(new wxPNGHandler);
+    auto logoPath = wxFileName{wxStandardPaths::Get().GetExecutablePath()};
+    // Path in folder directory: Resources/Logo.png
+    logoPath.AppendDir("Resources");
+    logoPath.SetFullName("KCNet-Networking-CPP");
+    logoPath.SetExt("png");
+    frame->SetIcon({logoPath.GetFullPath(), wxBITMAP_TYPE_PNG});
+
+    logoSetup = true;
 }
 
 /**

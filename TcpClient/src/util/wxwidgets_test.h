@@ -25,7 +25,7 @@ public:
     // this one is called on application startup and is a good place for the app
     // initialization (doing it here and not in the ctor allows to have an error
     // return: if OnInit() returns false, the application terminates)
-    virtual bool OnInit() override;
+    virtual bool OnInit() override;    
 };
 
 // Define a new frame type: this is going to be our main frame
@@ -39,10 +39,17 @@ public:
     void OnQuit(wxCommandEvent &event);
     void OnAbout(wxCommandEvent &event);
 
-    void OnDialogboxTest(wxCommandEvent &event);
+    void OnDialogboxTest(wxCommandEvent &event);    
+
+
+    // TODO Make this function private or something later.
+    void SetProgramLogo(MyFrame *frame);
 
 private:
     // wxBoxSizer *boxSizerVerticalOne = new wxBoxSizer(wxVERTICAL);
+
+    // This makes sure the program logo only gets set once.
+    bool logoSetup;
 
     // wxButton *testBtn;
     wxButton *currentChoiceBtn;
@@ -51,6 +58,15 @@ private:
     wxChoice *tcpMessageChoice;
 
     wxStatusBar *statusBar;
+
+    wxStaticText *text;
+    // wxStaticText* passwordLabel;
+
+    // wxTextEntryDialog *passwordEntry;
+
+    // wxTextCtrl *textControlTest;
+
+    bool SetupTcpClientCommands(wxPanel *panel);
 
     /**
      * Set the choice selections

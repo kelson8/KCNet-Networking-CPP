@@ -14,6 +14,25 @@ file(GLOB HEADERS
     "src/util/*.h"
     )
 
+
+# TODO Make this not overwrite files
+# https://www.studyplan.dev/cmake/cmake-working-with-the-file-system
+
+## Copying files into build folder
+# file(GLOB EXTRA_FILES
+    # "${CMAKE_CURRENT_SOURCE_DIR}/images/KCNet-Networking-CPP.png"
+    # )
+
+# foreach(EXTRA_FILE ${EXTRA_FILES})
+    # file(COPY ${EXTRA_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+# endforeach()
+
+# Copy logo into build folder
+file(COPY ${CMAKE_SOURCE_DIR}/images/KCNet-Networking-CPP.png
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Resources)
+
+###
+
 project(${PROJECT_NAME}
   LANGUAGES CXX
   VERSION 1.0.0
@@ -30,6 +49,16 @@ add_executable(${PROJECT_NAME}
     ${SOURCES}
     ${HEADERS}
     )
+
+# https://forum.cocosengine.org/t/v4-0-pc-resources-folder/48625/11
+# This should allow me to just symlink things like images to the build folder.
+# TODO Figure this out
+# if(LINUX OR WINDOWS)
+#     add_custom_command(
+#         TARGET ${PROJECT_NAME}
+#         PRE_BUILD COMMAND ${CMAKE_COMMAND} -E
+#         create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/images ${CMAKE_CURRENT_BINARY_DIR}/Resources)
+# endif()
 
 # Fix warnings for now
 # I got this working.
@@ -76,6 +105,11 @@ endif()
         # TinyRSA
         # socket
         fmt::fmt
+        # Cpp simple uri
+        # cppsimpleuri
+
+        # Tiny AES
+        # tiny-aes
     )
 
 if(WIN32)
