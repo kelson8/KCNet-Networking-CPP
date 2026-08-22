@@ -2,6 +2,11 @@
 #include <string>
 #include "defines.h"
 
+#include <fmt/format.h>
+#include <random>
+
+#include "util.h"
+
 #ifdef __linux__
 // TODO Look into this later.
 // https://github.com/embeddedmz/socket-cpp
@@ -64,7 +69,8 @@ cp keyname.* ./build/TcpServer
 TODO Automate copying keys into build folder later for testing.
 */
 
-// bool runProgram = true;
+// If the server should run
+bool runProgram = true;
 
 #ifdef __linux__
 
@@ -88,6 +94,12 @@ void got_signal(int)
 
 int main(int argc, char *argv[])
 {
+    // https://www.w3schools.com/cpp/cpp_howto_random_number.asp
+    // Seed the random number generator.
+    srand(time(0));
+
+    Util &util = Util::getInstance();
+    util.SetServerRunning(true);
 
 #ifdef __linux__
 
@@ -110,14 +122,18 @@ int main(int argc, char *argv[])
     // https://www.geeksforgeeks.org/cpp/multithreading-in-cpp/
     // std::thread thread2(print_keycode);
 
-    TcpServer &tcpServer = TcpServer::getInstance();
+    // TcpServer &tcpServer = TcpServer::getInstance();
+
+    // Random number generator test.
+    // fmt::print("Random number: {}\n", util.GenerateRandomNumber(10, 1000));
 
     // Run the toml file testing.
     // TomlHandler &tomlHandler = TomlHandler::getInstance();
 
     // tomlHandler.TestTomlFile();
 
-    while (true)
+    // If this gets the shutdown command from the client, it will shut the server down.
+    while (util.GetServerRunning())
     {
 
 #ifdef SECURE_SERVER_TEST
@@ -129,9 +145,9 @@ int main(int argc, char *argv[])
         // }
 #else
 
-        // while (runProgram)
         // Now with the constructor and destructor setup, this can now run in a while loop!
-        if (tcpServer.RunServer() != EXIT_SUCCESS)
+        // if (tcpServer.RunServer() != EXIT_SUCCESS)
+        if (TcpServer::getInstance().RunServer() != EXIT_SUCCESS)
         {
             return EXIT_FAILURE;
         }

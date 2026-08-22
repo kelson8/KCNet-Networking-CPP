@@ -38,6 +38,7 @@
 #include "toml_handler.h"
 
 #include "logger.h"
+#include "util.h"
 
 // #include "coroutine_test.h"
 
@@ -413,7 +414,32 @@ void TcpServer::ReadFromClient(int client_fd)
                 fmt::print("User with IP address of {} has sent the reload command to the server.\n", connectionPacket.userIp);
                 // log_output("Reload command received from client, reloading server...");
             }
-                }
+        }
+
+        // TODO Make this send a random generated number back to the client.
+        // if (std::string(buffer) == "RANDOM_NUMBER")
+        // {
+            // SendNonBlocking(client_fd, bannedMessage, strlen(bannedMessage));
+        // }
+
+        if(std::string(buffer) == "SHUTDOWN")
+        {
+            // Check if the user is allowed to shut the server down, for now this will be restricted to IPs.
+            // TODO Make this get a list of IPs in like an admin.toml config or something.
+            if(connectionPacket.userIp == "192.168.1.108")
+            {
+                log_output("Shutdown command received, shutting down TCP Server.");
+                Util::getInstance().SetServerRunning(false);
+            }
+            else
+            {
+                log_output("Client attempted to send shutdown command. Permission Denied from IP: ", connectionPacket.userIp);
+                // Well now, fmt is blocking for stuff like this and won't run here.
+                // fmt::print("Client with IP '{}' attempted to send shutdown command, permission denied.", connectionPacket.userIp);
+            }
+
+        }
+
         else
         {
             // Any message not listed above should also be logged.
