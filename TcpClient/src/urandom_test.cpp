@@ -16,6 +16,10 @@
 
 #include <vector>
 
+#ifdef WXWIDGETS_GUI
+#include <wx/wx.h>
+#endif // WXWIDGETS_GUI
+
 #endif // __linux__
 
 // Base64 library
@@ -170,19 +174,31 @@ std::string Urandom::GenerateRandom(size_t numNumbers, size_t numLetters, size_t
     int fd;
     unsigned char buffer[RANDOM_BYTES];
 
+    std::string failedToOpen = "Failed to open /dev/urandom";
+    std::string failedToRead = "Failed to read random bytes";
+
     // Open /dev/urandom
     fd = open("/dev/urandom", O_RDONLY);
     if (fd < 0) {
-        perror("Failed to open /dev/urandom");
-        return "Failed to open";
+#ifdef WXWIDGETS_GUI
+        wxMessageBox(wxT(failedToOpen));
+#else
+        perror(failedToOpen.c_str());
+#endif
+        return failedToOpen;
         // return EXIT_FAILURE;
     }
 
     // Read random bytes
     if (read(fd, buffer, RANDOM_BYTES) != RANDOM_BYTES) {
-        perror("Failed to read random bytes");
+#ifdef WXWIDGETS_GUI
+        wxMessageBox(wxT(failedToRead));
+#else
+        perror(failedToRead.c_str());
+#endif // WXWIDGETS_GUI
+
         close(fd);
-        return "Failed to read random bytes";
+        return failedToRead;
         // return EXIT_FAILURE;
     }
 

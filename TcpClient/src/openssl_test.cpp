@@ -27,6 +27,10 @@
 #include "TCPSSLClient.h"
 #endif // NEW_SERVER_TEST
 
+#ifdef WXWIDGETS_GUI
+#include <wx/wx.h>
+#endif // WXWIDGETS_GUI
+
 // #include "decrypt.h"
 // #include "encrypt.h"
 // #include "keyPair.h"
@@ -69,7 +73,11 @@ int OpensslTest::create_tcp_client(const char *server_ip, int port)
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
     {
+#ifdef WXWIDGETS_GUI
+        wxMessageBox(wxT("Socket creation failed"));
+#else
         perror("socket creation failed");
+#endif // XWIDGETS_GUI
         exit(EXIT_FAILURE);
     }
     //
@@ -80,7 +88,12 @@ int OpensslTest::create_tcp_client(const char *server_ip, int port)
     server_addr.sin_port = htons(port);
     if (inet_pton(AF_INET, server_ip, &server_addr.sin_addr) <= 0)
     {
+#ifdef WXWIDGETS_GUI
+        wxMessageBox(wxT("Invalid server IP"));
+#else
         perror("invalid server IP");
+#endif // WXWIDGETS_GUI
+        
         close(sockfd);
         return -1;
         // exit(EXIT_FAILURE);
@@ -90,7 +103,11 @@ int OpensslTest::create_tcp_client(const char *server_ip, int port)
     // Attempt to connect to the server.
     if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
     {
+#ifdef WXWIDGETS_GUI
+        wxMessageBox(wxT("Connection to server failed."));
+#else
         perror("connection failed");
+#endif //WXWIDGETS_GUI
         close(sockfd);
         return -1;
         // exit(EXIT_FAILURE);

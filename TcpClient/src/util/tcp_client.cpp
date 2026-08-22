@@ -1,4 +1,3 @@
-
 #ifdef __linux__
 #include "tcp_client.h"
 
@@ -40,15 +39,16 @@
 /**
  * Structure for the future packets that I will be sending to the server.
  * I will be sending the public key, and message to encrypt with this.
- * 
+ *
  * TODO Fix this to be used.
  */
-struct EncryptionPacket {
+struct EncryptionPacket
+{
     // const char* publicKey;
-    const unsigned char* key;
+    const unsigned char *key;
     // uint8_t key;
     // const char* messageToEncrypt;
-    const char* message;
+    const char *message;
 };
 
 /**
@@ -66,14 +66,13 @@ struct EncryptionPacket {
 
 TcpClient::TcpClient()
 {
-
 }
 
 /**
  * Convert the key from base64 back to text.
  */
 // void DecodeKeyBase64(EncryptionPacket packet)
-void DecodeKeyBase64(const char* text)
+void DecodeKeyBase64(const char *text)
 {
     // auto decoded = base64::from_base64(reinterpret_cast<const char*>(packet.key));
     auto decoded = base64::from_base64(text);
@@ -84,7 +83,7 @@ void DecodeKeyBase64(const char* text)
  * Make the key into base64.
  */
 // void EncodeKeyBase64(EncryptionPacket packet)
-void EncodeKeyBase64(const unsigned char* text)
+void EncodeKeyBase64(const unsigned char *text)
 {
     // auto encoded = base64::to_base64(packet.key, sizeof(packet.key));
     auto encoded = base64::to_base64(text, sizeof(text));
@@ -93,52 +92,56 @@ void EncodeKeyBase64(const unsigned char* text)
 
 /**
  * Connect to the TCP Server with SSL.
- * 
+ *
  * Secure server testing.
  */
 void TcpClient::ConnectToServerSecure()
 {
 #ifdef SECURE_SERVER_TEST
     OpensslTest opensslTest;
-        // New testing
+    // New testing
     // Well this no longer works with my other testing.
     // Step 1: Connect to server via TCP
     int sockfd = opensslTest.create_tcp_client(SERVER_IP, SERVER_PORT);
- 
+
     // Step 2: Initialize OpenSSL
     // init_openssl();
     opensslTest.init_openssl();
- 
+
     // Step 3: Create SSL context and object
     // SSL_CTX* ctx = create_client_ssl_context();
-    SSL_CTX* ctx = opensslTest.create_client_ssl_context();
-    SSL* ssl = SSL_new(ctx);
-    SSL_set_fd(ssl, sockfd);  // Associate socket with SSL
- 
+    SSL_CTX *ctx = opensslTest.create_client_ssl_context();
+    SSL *ssl = SSL_new(ctx);
+    SSL_set_fd(ssl, sockfd); // Associate socket with SSL
+
     // Step 4: Perform SSL handshake
-    if (SSL_connect(ssl) <= 0) {
+    if (SSL_connect(ssl) <= 0)
+    {
         ERR_print_errors_fp(stderr);
-    } else {
+    }
+    else
+    {
         log_output("SSL handshake successful!");
         log_output("Using cipher: ", SSL_get_cipher(ssl));
 
         // printf("SSL handshake successful!\n");
         // printf("Using cipher: %s\n", SSL_get_cipher(ssl));
- 
+
         // Send data securely
-        const char* message = "Hello from secure client!";
+        const char *message = "Hello from secure client!";
         SSL_write(ssl, message, strlen(message));
- 
+
         // Read response
         char buffer[BUFFER_SIZE];
         int bytes_read = SSL_read(ssl, buffer, BUFFER_SIZE - 1);
-        if (bytes_read > 0) {
+        if (bytes_read > 0)
+        {
             buffer[bytes_read] = '\0';
             log_output("Server response: ", buffer);
             // printf("Server response: %s\n", buffer);
         }
     }
- 
+
     // Cleanup
     SSL_shutdown(ssl);
     SSL_free(ssl);
@@ -158,7 +161,7 @@ void TcpClient::ConnectToServerSecure()
  * message The message to send.
  * messageLength The length of the message to send.
  */
-void TcpClient::SendMessageToServer(int socket, const char* message, size_t messageLength)
+void TcpClient::SendMessageToServer(int socket, const char *message, size_t messageLength)
 {
     // Last parameter is flags.
     send(socket, message, messageLength, 0);
@@ -166,11 +169,15 @@ void TcpClient::SendMessageToServer(int socket, const char* message, size_t mess
 
 /**
  * Connect to the TCP Server.
- * 
+ *
  * TODO Fix this to give a proper error if the server is offline.
  */
 // void ConnectToServer(int argc, char *argv[])
+#ifdef WXWIDGETS_GUI
+int TcpClient::ConnectToServer(ServerCommand command)
+#else
 int TcpClient::ConnectToServer()
+#endif
 {
     Urandom urandom;
 
@@ -182,7 +189,7 @@ int TcpClient::ConnectToServer()
     // If not, the user will still be banned but this will display:
     //  'Message sent' instaed of the banned message.
     // TODO Make this a bit better, I will come up with a different solution later.
-    const char* bannedMessage = "You attempted to connect from a banned IP.";
+    const char *bannedMessage = "You attempted to connect from a banned IP.";
 
     // TODO Fix this, it gives invalid conversion from const char* to const unsigned char*
     // EncryptionPacket packet;
@@ -200,7 +207,6 @@ int TcpClient::ConnectToServer()
     // packet.key = "Test Key, will need to be read from file";
     // EncodeKeyBase64("Test");
     // DecodeKeyBase64("xIDAEMl3AAA=");
-
 
     // The input for the user, works in a bash prompt.
     // If the value is in all quotes it seems to work.
@@ -224,14 +230,15 @@ int TcpClient::ConnectToServer()
     // const char *message = "Hello from client";
 
     // Now this sends a value from /dev/urandom to the server.
-    const char *message = randomValue.c_str();
+    // const char *message = randomValue.c_str();
+    const char *randomMessage = randomValue.c_str();
 
     // Send the reload command.
-    // const char *message = "RELOAD";
+    const char *reloadCommand = "RELOAD";
 
     // Send the shutdown command.
-    // const char *message = "SHUTDOWN";
-    
+    const char *shutdownCommand = "SHUTDOWN";
+
     // Struct testing
     // RsaMessageEncrypt rsaEncrypt;
     // rsaEncrypt.messageToEncrypt = "dd";
@@ -242,8 +249,8 @@ int TcpClient::ConnectToServer()
     // bool doesFileExist = fileFunctions.FileExists("test.txt");
     // if(!doesFileExist)
     // {
-        // log_output("Error: The file doesn't exist.");
-        // return EXIT_FAILURE;
+    // log_output("Error: The file doesn't exist.");
+    // return EXIT_FAILURE;
     // }
 
     // const char* message = fileFunctions.ReadFile("test.txt").c_str();
@@ -260,8 +267,28 @@ int TcpClient::ConnectToServer()
     //     return;
     // }
 
-    SendMessageToServer(sock, message, strlen(message));
-    
+    switch (command)
+    {
+    case URANDOM_MESSAGE:
+        SendMessageToServer(sock, randomMessage, strlen(randomMessage));
+        break;
+
+    case RELOAD_COMMAND:
+        SendMessageToServer(sock, reloadCommand, strlen(reloadCommand));
+        break;
+
+    case SHUTDOWN_COMMAND:
+        SendMessageToServer(sock, shutdownCommand, strlen(shutdownCommand));
+        break;
+
+    default:
+        std::cout << "Error, choice invalid" << std::endl;
+        break;
+    }
+
+    // Original working method.
+    // SendMessageToServer(sock, message, strlen(message));
+
     // Read the bytes back from the server, or say message was sent.
     char buffer[1024] = {0};
     ssize_t bytes_read = recv(sock, buffer, sizeof(buffer) - 1, 0);
@@ -272,22 +299,21 @@ int TcpClient::ConnectToServer()
         // TODO Make this ban system a bit better.
         // If the client is banned but the message is different,
         //  this will still say 'Sent message to server."
-        
+
         // Display the message out of the buffer directly for testing.
         // fmt::println("Server replied: {}", buffer);
-        if(std::string(buffer) == bannedMessage)
+        if (std::string(buffer) == bannedMessage)
         {
             log_output("You have been banned from this server.");
             return EXIT_FAILURE;
-        } 
-        else 
+        }
+        else
         {
             // To include the message in the output, use this below.
             // log_output("Sent message to server: ", buffer);
             log_output("Sent message to server.");
             return EXIT_SUCCESS;
         }
-
     }
 
     close(sock);

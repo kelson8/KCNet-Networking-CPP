@@ -9,7 +9,17 @@
 
 // Switch to using the wxwidgets gui for the client
 // This needs some work done before it's ready to be used.
-// #define WXWIDGETS_GUI
+// TODO Figure out how to disable this when building with Docker.
+#define WXWIDGETS_GUI
+
+// Values for wxwidgets
+// Set the Window width and height here, such as 1280x720.
+#define WINDOW_WIDTH 450
+#define WINDOW_HEIGHT 300
+
+// Enable the url checker testing to validate urls.
+// Not implemented yet.
+// #define URL_CHECKER_TEST
 
 // Set the server connection info.
 #define SERVER_PORT 8055
