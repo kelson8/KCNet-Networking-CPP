@@ -52,8 +52,10 @@ jobs:
           - os: ubuntu-latest
             c_compiler: cl
 
+    # This requires libwxgtk3.2-dev.
     steps:
     - uses: actions/checkout@v4
+    - run: apt install libwxgtk3.2-dev
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
