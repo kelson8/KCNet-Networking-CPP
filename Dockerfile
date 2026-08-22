@@ -29,6 +29,9 @@ ARG CXX_COMPILER=g++
 # ARG COMPILER_VERSION=12
 ARG COMPILER_VERSION=14
 
+# The wxwidgets version to install, 3.2 is on Ubuntu 24.04.
+ENV WXGTK3_VERSION="3.2"
+
 # Removed: python3.10 python3-pip ninja-build \
 
 # https://dev.to/ajeetraina/how-to-clear-docker-cache-2nnp
@@ -39,6 +42,7 @@ RUN apt-get update -qq && export DEBIAN_FRONTEND=noninteractive && \
     ca-certificates git \
     libsqlite3-dev \
     libssl-dev \
+    libwxgtk${WXGTK3_VERSION}-dev \
     ${C_COMPILER}-${COMPILER_VERSION} \
     ${CXX_COMPILER}-${COMPILER_VERSION} && \
     apt-get clean && \
