@@ -26,7 +26,11 @@
 // If this is set to false, it disables the connection to the server.
 bool connectionEnabled = true;
 
+#ifndef WXWIDGETS_GUI
 
+/**
+ * Main function for client to server communication.
+ */
 int main(int argc, char *argv[])
 {
 
@@ -90,3 +94,5 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+
+#endif // !WXWIDGETS_GUI

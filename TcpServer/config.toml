@@ -2,3 +2,8 @@
 name = "TcpServer"
 authors = "kelson8"
 dependencies = ""
+
+[banned-ips]
+server1 = "192.168.1.81"
+# TODO Implement subnet support.
+# subnet1 = "10.1.10.0/24"

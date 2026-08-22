@@ -99,6 +99,7 @@ int main(int argc, char *argv[])
     srand(time(0));
 
     Util &util = Util::getInstance();
+    // This makes it to where the program loop will run.
     util.SetServerRunning(true);
 
 #ifdef __linux__

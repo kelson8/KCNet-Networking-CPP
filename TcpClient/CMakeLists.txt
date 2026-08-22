@@ -54,6 +54,14 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     # lib/base64
     )
 
+# Added wxwidgets, this is cross platform so I'll include it in all systems.
+# https://docs.wxwidgets.org/latest/overview_cmake.html
+find_package(wxWidgets REQUIRED COMPONENTS net core base)
+if(wxWidgets_USE_FILE) # not defined in CONFIG mode
+    include(${wxWidgets_USE_FILE})
+endif()
+
+
 # Add OpenSSL for project.
 # https://stackoverflow.com/questions/45548088/include-openssl-in-a-cmakelist-txt-file
 if(UNIX)
@@ -75,3 +83,7 @@ if(WIN32)
 	target_link_libraries(${PROJECT_NAME} PRIVATE 
 	OpenSSL::Crypto)
 endif()
+
+# Wxwidgets library
+target_link_libraries(${PROJECT_NAME} PRIVATE 
+    ${wxWidgets_LIBRARIES})

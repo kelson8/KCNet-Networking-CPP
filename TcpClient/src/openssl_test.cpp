@@ -82,7 +82,8 @@ int OpensslTest::create_tcp_client(const char *server_ip, int port)
     {
         perror("invalid server IP");
         close(sockfd);
-        exit(EXIT_FAILURE);
+        return -1;
+        // exit(EXIT_FAILURE);
     }
     //
 
@@ -91,7 +92,8 @@ int OpensslTest::create_tcp_client(const char *server_ip, int port)
     {
         perror("connection failed");
         close(sockfd);
-        exit(EXIT_FAILURE);
+        return -1;
+        // exit(EXIT_FAILURE);
     }
 
     //

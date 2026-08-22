@@ -7,6 +7,10 @@
 // Enable my SSL testing, required to be enabled on the Server and Client or it won't work.
 // #define SECURE_SERVER_TEST
 
+// Switch to using the wxwidgets gui for the client
+// This needs some work done before it's ready to be used.
+// #define WXWIDGETS_GUI
+
 // Set the server connection info.
 #define SERVER_PORT 8055
 #define SERVER_IP "192.168.1.108"

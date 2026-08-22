@@ -6,11 +6,15 @@
                 "${default}",
                 "${workspaceFolder}/lib/base64/include",
                 "${workspaceFolder}/TcpClient/src/util",
-                "${workspaceFolder}/TcpServer/src",
                 "${workspaceFolder}/TcpClient/src",
+                "${workspaceFolder}/TcpServer/src",
                 "${workspaceFolder}/TcpServer/src/util",
                 "${workspaceFolder}/build/_deps/fmt-src/include",
-                "${workspaceFolder}/lib/argh"
+                "${workspaceFolder}/lib/argh",
+                "${workspaceFolder}/build/_deps/tomlplusplus-src/include",
+                // For wxwidgets
+                "/usr/include/wx-3.2",
+                "/usr/lib/x86_64-linux-gnu/wx/include/gtk3-unicode-3.2"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
