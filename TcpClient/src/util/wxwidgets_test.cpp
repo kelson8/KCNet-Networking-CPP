@@ -49,21 +49,21 @@
 // the event tables connect the wxWidgets events with the functions (event
 // handlers) which process them. It can be also done at run-time, but for the
 // simple menu events like this the static method is much simpler.
-wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
-    EVT_MENU(Minimal_Quit, MyFrame::OnQuit)
-        EVT_MENU(Minimal_About, MyFrame::OnAbout)
+wxBEGIN_EVENT_TABLE(TcpClientFrame, wxFrame)
+    EVT_MENU(Minimal_Quit, TcpClientFrame::OnQuit)
+        EVT_MENU(Minimal_About, TcpClientFrame::OnAbout)
             wxEND_EVENT_TABLE()
 
-    // wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
+    // wxBEGIN_EVENT_TABLE(TcpClientFrame, wxFrame)
     //     EVT_BUTTON(BUTTON_Send_Message, TcpClient::getInstance().ConnectToServer())
     // wxEND_EVENT_TABLE() // The button is pressed
 
     // Create a new application object: this macro will allow wxWidgets to create
     // the application object during program execution (it's better than using a
     // static object for many reasons) and also implements the accessor function
-    // wxGetApp() which will return the reference of the right type (i.e. MyApp and
+    // wxGetApp() which will return the reference of the right type (i.e. TcpClientApp and
     // not wxApp)
-    wxIMPLEMENT_APP(MyApp);
+    wxIMPLEMENT_APP(TcpClientApp);
 
 // ============================================================================
 // implementation
@@ -96,7 +96,7 @@ int DiceRoll()
 }
 
 // 'Main program' equivalent: the program execution "starts" here
-bool MyApp::OnInit()
+bool TcpClientApp::OnInit()
 {
     // Display the program starting message in the console.
     std::string runString = fmt::format("{} Running GUI for {} {}", LOG_PREFIX, PROGRAM_NAME, PROGRAM_VERSION);
@@ -130,7 +130,7 @@ bool MyApp::OnInit()
         return false;
 
     // create the main application window
-    MyFrame *frame = new MyFrame(PROGRAM_NAME);
+    TcpClientFrame *frame = new TcpClientFrame(PROGRAM_NAME);
 
     // Add the logo for TcpClient
     // https://github.com/gammasoft71/Examples_wxWidgets/blob/master/wxCore/Applications/ApplicationIcon/ApplicationIcon.cpp
@@ -154,7 +154,7 @@ bool MyApp::OnInit()
 // frame constructor
 // Disabled window resizing for now
 // https://forums.wxwidgets.org/viewtopic.php?t=6349
-MyFrame::MyFrame(const wxString &title)
+TcpClientFrame::TcpClientFrame(const wxString &title)
     : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)),
       logoSetup(false)
 {
@@ -183,7 +183,7 @@ MyFrame::MyFrame(const wxString &title)
 
     // wxSizer *sizer = new wxBoxSizer(wxHORIZONTAL);
     // wxButton *aboutBtn = new wxButton(this, wxID_ANY, "About...");
-    // aboutBtn->Bind(wxEVT_BUTTON, &MyFrame::OnAbout, this);
+    // aboutBtn->Bind(wxEVT_BUTTON, &TcpClientFrame::OnAbout, this);
     // sizer->Add(aboutBtn, wxSizerFlags().Center());
     // SetSizer(sizer);
 #endif // wxUSE_MENUBAR/!wxUSE_MENUBAR
@@ -217,7 +217,7 @@ MyFrame::MyFrame(const wxString &title)
 
     // dialogTestBtn = new wxButton(panel1, wxID_ANY, "Dialog test");
     // wxButton *dialogTestBtn = new wxButton(this, wxID_ANY, "Dialog test");
-    // dialogTestBtn->Bind(wxEVT_BUTTON, &MyFrame::OnDialogboxTest, this);
+    // dialogTestBtn->Bind(wxEVT_BUTTON, &TcpClientFrame::OnDialogboxTest, this);
 
     // https://forums.wxwidgets.org/viewtopic.php?t=15526
     // wxSizer *sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -347,7 +347,7 @@ MyFrame::MyFrame(const wxString &title)
  * Setup the client TCP commands message choices and send message button.
  * TODO Fix this to have better error handling.
  */
-bool MyFrame::SetupTcpClientCommands(wxPanel *panel)
+bool TcpClientFrame::SetupTcpClientCommands(wxPanel *panel)
 {
     //-------
     // TCPClient message sending to TcpServer.
@@ -362,7 +362,7 @@ bool MyFrame::SetupTcpClientCommands(wxPanel *panel)
                                                .data());
 
     tcpMessageChoice->SetSelection(0);
-    tcpMessageChoice->Bind(wxEVT_CHOICE, &MyFrame::OnChoiceClick, this);
+    tcpMessageChoice->Bind(wxEVT_CHOICE, &TcpClientFrame::OnChoiceClick, this);
 
     // https://github.com/gammasoft71/Examples_wxWidgets/blob/master/wxCore/Controls/Button/Button.cpp
     currentChoiceBtn = new wxButton(panel, ID_SEND_MESSAGE_BTN, "Send message");
@@ -384,7 +384,7 @@ bool MyFrame::SetupTcpClientCommands(wxPanel *panel)
 /**
  * Set the program logo
  */
-void MyFrame::SetProgramLogo(MyFrame *frame)
+void TcpClientFrame::SetProgramLogo(TcpClientFrame *frame)
 {
     // Do nothing if logo is already set.
     if (logoSetup)
@@ -406,7 +406,7 @@ void MyFrame::SetProgramLogo(MyFrame *frame)
  *
  * https://wiki.wxwidgets.org/WxMessageBox
  */
-void MyFrame::OnDialogboxTest(wxCommandEvent &WXUNUSED(event))
+void TcpClientFrame::OnDialogboxTest(wxCommandEvent &WXUNUSED(event))
 {
     wxMessageBox(wxT("Hello World!"));
 
@@ -420,13 +420,13 @@ void MyFrame::OnDialogboxTest(wxCommandEvent &WXUNUSED(event))
 
 // event handlers
 
-void MyFrame::OnQuit(wxCommandEvent &WXUNUSED(event))
+void TcpClientFrame::OnQuit(wxCommandEvent &WXUNUSED(event))
 {
     // true is to force the frame to close
     Close(true);
 }
 
-void MyFrame::OnAbout(wxCommandEvent &WXUNUSED(event))
+void TcpClientFrame::OnAbout(wxCommandEvent &WXUNUSED(event))
 {
     wxMessageBox(wxString::Format(
                      "Welcome to %s!\n"

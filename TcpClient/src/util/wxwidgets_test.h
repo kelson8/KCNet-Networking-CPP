@@ -16,7 +16,7 @@
 // ----------------------------------------------------------------------------
 
 // Define a new application type, each program should derive a class from wxApp
-class MyApp : public wxApp
+class TcpClientApp : public wxApp
 {
 public:
     // override base class virtuals
@@ -33,11 +33,11 @@ private:
 };
 
 // Define a new frame type: this is going to be our main frame
-class MyFrame : public wxFrame
+class TcpClientFrame : public wxFrame
 {
 public:
     // ctor(s)
-    MyFrame(const wxString &title);
+    TcpClientFrame(const wxString &title);
 
     // event handlers (these functions should _not_ be virtual)
     void OnQuit(wxCommandEvent &event);
@@ -47,7 +47,7 @@ public:
 
 
     // TODO Make this function private or something later.
-    void SetProgramLogo(MyFrame *frame);
+    void SetProgramLogo(TcpClientFrame *frame);
 
 private:
     // wxBoxSizer *boxSizerVerticalOne = new wxBoxSizer(wxVERTICAL);
