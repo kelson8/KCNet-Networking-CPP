@@ -6,6 +6,8 @@
 #include "tcp_client.h"
 #include <fmt/format.h>
 
+#include "curl_test.h"
+
 #ifdef WXWIDGETS_GUI
 #include <wx/wx.h>
 #include <wx/frame.h>
@@ -72,14 +74,17 @@ wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
 // 'Main program' equivalent: the program execution "starts" here
 bool MyApp::OnInit()
 {
+    // Display the program starting message in the console.
+    std::string runString = fmt::format("{} Running GUI for {} {}", LOG_PREFIX, PROGRAM_NAME, PROGRAM_VERSION);
+    std::cout << runString << std::endl;
 
     // TODO Try to fix this to work
     // This should log if the GUI is enabled or not, if it isn't then it's using console mode.
     // https://stackoverflow.com/questions/13204177/how-to-find-out-if-running-from-terminal-or-gui
     // if (NULL == getenv("DISPLAY"))
-    // std::cout << "Gui is not enabled.";
+    // std::cout << "Gui is not enabled." << std::endl;
     // else
-    // std::cout << "Gui is enabled.";
+    // std::cout << "Gui is enabled." << std::endl;
 
     // call the base class initialization method, currently it only parses a
     // few common command-line options but it could be do more in the future
@@ -191,6 +196,16 @@ MyFrame::MyFrame(const wxString &title)
         exit(EXIT_FAILURE);
     }
 
+#ifdef CURL_TEST
+    // New for curl testing
+
+    curlTestBtn = new wxButton(panel1, ID_CURL_TEST_BTN, "Curl Test");
+    curlTestBtn->Bind(wxEVT_BUTTON, [&](wxCommandEvent &event)
+    {
+        CurlTest::getInstance().TestUrlRequest("https://kelsoncraft.net");
+    });
+#endif // CURL_TEST
+
     //-------
     // Text testing
     // https://docs.wxwidgets.org/stable/classwx_static_text.html
@@ -268,6 +283,10 @@ MyFrame::MyFrame(const wxString &title)
         sizer->Add(tcpMessageChoice, 1, wxALIGN_LEFT);
         sizer->Add(currentChoiceBtn, 1, wxALIGN_LEFT);
     }
+
+#ifdef CURL_TEST
+    sizer->Add(curlTestBtn, 1, wxALIGN_RIGHT);
+#endif // CURL_TEST
 
     // Future testing
     // sizer->Add(text, 1, wxALIGN_CENTER);

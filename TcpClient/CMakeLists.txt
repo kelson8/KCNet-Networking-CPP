@@ -14,6 +14,25 @@ file(GLOB HEADERS
     "src/util/*.h"
     )
 
+# This turns on the CURL_TEST preprocessor and enables testing with Curl with TcpClient.
+# Curl can be a pain to get working on Windows for me, so by default this is disabled.
+option(ENABLE_CURL "Enable the curl testing" OFF)
+
+# TODO Move this option into here, this breaks my build for some reason.
+# This will toggle the WxWidgets GUI for TcpClient, for Docker and CLI use this should be disabled.
+# option(ENABLE_GUI "Enable the WxWidgets GUI for TcpClient" ON)
+
+# Enable curl test
+# https://stackoverflow.com/questions/34937671/cmake-how-to-check-if-preprocessor-is-defined
+# https://stackoverflow.com/questions/9017573/define-a-preprocessor-macro-through-cmake
+if(ENABLE_CURL)
+    add_compile_definitions(CURL_TEST=1)
+endif()
+
+# Enable the GUI
+# if(ENABLE_GUI)
+#     add_compile_definitions(WXWIDGETS_GUI=1)
+# endif()
 
 # TODO Make this not overwrite files
 # https://www.studyplan.dev/cmake/cmake-working-with-the-file-system
@@ -83,13 +102,21 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     # lib/base64
     )
 
-# Added wxwidgets, this is cross platform so I'll include it in all systems.
-# https://docs.wxwidgets.org/latest/overview_cmake.html
-find_package(wxWidgets REQUIRED COMPONENTS net core base)
-if(wxWidgets_USE_FILE) # not defined in CONFIG mode
-    include(${wxWidgets_USE_FILE})
-endif()
 
+# if(ENABLE_GUI)
+    # Added wxwidgets, this is cross platform so I'll include it in all systems.
+    # https://docs.wxwidgets.org/latest/overview_cmake.html
+    find_package(wxWidgets REQUIRED COMPONENTS net core base)
+    if(wxWidgets_USE_FILE) # not defined in CONFIG mode
+        include(${wxWidgets_USE_FILE})
+    endif()
+# endif()
+
+# Add curl for testing
+# https://stackoverflow.com/questions/15657931/linking-curl-in-a-project-using-cmake
+if(ENABLE_CURL)
+    find_package(CURL REQUIRED)
+endif()
 
 # Add OpenSSL for project.
 # https://stackoverflow.com/questions/45548088/include-openssl-in-a-cmakelist-txt-file
@@ -118,6 +145,16 @@ if(WIN32)
 	OpenSSL::Crypto)
 endif()
 
-# Wxwidgets library
-target_link_libraries(${PROJECT_NAME} PRIVATE 
-    ${wxWidgets_LIBRARIES})
+# Extra libraries
+
+# if(ENABLE_GUI)
+    target_link_libraries(${PROJECT_NAME} PRIVATE 
+        ${wxWidgets_LIBRARIES}
+        )
+# endif()
+
+if(ENABLE_CURL)
+    target_link_libraries(${PROJECT_NAME} PRIVATE 
+        CURL::libcurl
+    )
+endif()

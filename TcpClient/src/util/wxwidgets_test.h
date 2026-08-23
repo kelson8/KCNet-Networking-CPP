@@ -55,6 +55,8 @@ private:
     wxButton *currentChoiceBtn;
     wxButton *dialogTestBtn;
 
+    wxButton *curlTestBtn;
+
     wxChoice *tcpMessageChoice;
 
     wxStatusBar *statusBar;
@@ -111,6 +113,7 @@ enum
     // ID_CURRENT_CHOICE_BTN,
     ID_STATIC_TEXT_TEST1,
     ID_UPDATE_TEST_TEXT_BTN,
+    ID_CURL_TEST_BTN,
 };
 
 #endif // WXWIDGETS_GUI

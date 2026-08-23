@@ -21,6 +21,12 @@
 // Not implemented yet.
 // #define URL_CHECKER_TEST
 
+// Enable the Curl testing
+// I will be using this eventually to check if the server is online before trying to connect to it.
+// This should only be set in TcpClient CMakeLists with the ENABLE_CURL option.
+// Keeping this here so I remember what it does.
+// #define CURL_TEST
+
 // Set the server connection info.
 #define SERVER_PORT 8055
 #define SERVER_IP "192.168.1.108"
@@ -31,6 +37,7 @@
 // Program info
 #define PROGRAM_NAME "KCNet-TcpClient"
 #define PROGRAM_VERSION "v0.0.1a"
+#define LOG_PREFIX "[KCNet-TcpClient]:"
 
 // Enable the new server test with the library.
 // https://github.com/embeddedmz/socket-cpp
