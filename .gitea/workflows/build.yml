@@ -17,7 +17,7 @@ jobs:
       - name: Install Dependencies
         image: docker.gitea.com/runner-images:ubuntu-latest
         run: |
-          apt-get update && apt-get install -y cmake make g++ libncurses-dev libwxgtk3.2-dev
+          apt-get update && apt-get install -y cmake make g++ libncurses-dev libwxgtk3.2-dev libcurl4-openssl-dev
 
       - name: Checkout Repository
         run: |
