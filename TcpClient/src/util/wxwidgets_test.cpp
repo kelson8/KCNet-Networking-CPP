@@ -8,6 +8,8 @@
 
 #include "curl_test.h"
 
+#include <random>
+
 #ifdef WXWIDGETS_GUI
 #include <wx/wx.h>
 #include <wx/frame.h>
@@ -71,12 +73,48 @@ wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
 // the application class
 // ----------------------------------------------------------------------------
 
+/**
+ * Dice rolling method
+ * 
+ * TODO Move this elsewhere, move this into KCNet-Library-CPP on GitHub later.
+ * 
+ * @returns The value of the dice roll.
+ */
+int DiceRoll()
+{
+    // Define range
+    int min = 1;
+    int max = 6;
+
+    // Initialize a random number generator
+    std::mt19937 gen(time(0));
+    std::uniform_int_distribution<> distrib(min, max);
+
+    // Generate random number in the range [min, max]
+    int randomValue = distrib(gen);
+    return randomValue;
+}
+
 // 'Main program' equivalent: the program execution "starts" here
 bool MyApp::OnInit()
 {
     // Display the program starting message in the console.
     std::string runString = fmt::format("{} Running GUI for {} {}", LOG_PREFIX, PROGRAM_NAME, PROGRAM_VERSION);
     std::cout << runString << std::endl;
+
+    // Very basic random number generator, just store a random number for later use.
+    randomNumber = DiceRoll();
+
+    if(!randomNumber == 0)
+    {
+        // Enable this to log the random number output
+        // std::cout << "[DBG]: Dice roll result: " << randomNumber << std::endl;
+    }
+    else
+    {
+        std::cout << "[DBG]: Random number was 0 or not valid!" << std::endl;
+        // Disable random number generator functions if I add any here.
+    }
 
     // TODO Try to fix this to work
     // This should log if the GUI is enabled or not, if it isn't then it's using console mode.

@@ -25,7 +25,11 @@ public:
     // this one is called on application startup and is a good place for the app
     // initialization (doing it here and not in the ctor allows to have an error
     // return: if OnInit() returns false, the application terminates)
-    virtual bool OnInit() override;    
+    virtual bool OnInit() override;
+    
+private:
+    // Will be a random number from 1-6 generated with the DiceRoll function.
+    int randomNumber;
 };
 
 // Define a new frame type: this is going to be our main frame
